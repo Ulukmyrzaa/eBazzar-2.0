@@ -1,0 +1,12 @@
+# created by virtualenv automatically
+*
+__pycache__
+db.sqlite3
+.pyc
+.log
+.pot
+media
+../.venv
+.idea
+.idea/**aws.xml
+

@@ -25,7 +25,7 @@ class CustomUser(AbstractUser):
     phone_number = models.CharField(unique=True, max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=90, unique=False, null=False)
     credit_card = models.IntegerField(max_length=16, blank=True, null=True)
-    role = models.ForeignKey(Role, on_delete=models.PROTECT, null=False, blank=False)
+    roles = models.ManyToManyField(Role, related_name='users', blank=True)
     user_basket = models.ForeignKey(
         Basket, on_delete=models.CASCADE, null=True, blank=True
     )
@@ -121,7 +121,7 @@ class Wishlist(models.Model):
 
 
 class Order(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False)
+    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False, related_name='orders')
     products = models.ManyToManyField(Product, related_name="order_products")
     creation_date = models.DateTimeField(null=False, blank=False)
     payment_date = models.DateTimeField(null=False, blank=False)
@@ -129,3 +129,16 @@ class Order(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(1), MaxValueValidator(99999)],
     )
+    STATUS_CHOICES = [
+        ('WAITING_PAYMENT', 'Waiting Payment'),
+        ('PROCESSING', 'Processing'),
+        ('SHIPPED', 'Success'),
+        ('PAID', 'Paid'),
+        ('ERROR', 'Error'),
+        ('CANCELED', 'Canceled'),
+        ('REFUNDED', 'Refunded'),
+        ('PARTIALLY_SHIPPED', 'Partially shipped'),
+        ('ON_HOLD', 'On hold'),
+        ('SHIPPED', 'Shipped')
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='WAITING_PAYMENT')

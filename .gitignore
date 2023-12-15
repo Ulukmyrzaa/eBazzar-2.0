@@ -9,4 +9,4 @@ media
 ../.venv
 .idea
 .idea/**aws.xml
-
+.env

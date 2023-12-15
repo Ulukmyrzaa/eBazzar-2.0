@@ -24,7 +24,7 @@ class CustomUser(AbstractUser):
     user_update_time = models.DateTimeField(null=False, blank=False)
     phone_number = models.CharField(unique=True, max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=90, unique=False, null=False)
-    credit_card = models.IntegerField(max_length=16, blank=True, null=True)
+    credit_card = models.IntegerField(blank=True, null=True)
     role = models.ForeignKey(Role, on_delete=models.PROTECT, null=False, blank=False)
     user_basket = models.ForeignKey(
         Basket, on_delete=models.CASCADE, null=True, blank=True
@@ -67,7 +67,7 @@ class Product(models.Model):
         "Category", on_delete=models.CASCADE, related_name="category_products"
     )
     product_info = models.OneToOneField(
-        "ProductInfo", on_delete=models.CASCADE, null=False, blank=False
+        "ProductInfo", on_delete=models.CASCADE,  related_name='product_info_for_product', null=False, blank=False
     )
 
 
@@ -126,6 +126,7 @@ class Order(models.Model):
     creation_date = models.DateTimeField(null=False, blank=False)
     payment_date = models.DateTimeField(null=False, blank=False)
     total_price = models.DecimalField(
+        max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(1), MaxValueValidator(99999)],
     )

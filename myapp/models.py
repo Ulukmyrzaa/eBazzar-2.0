@@ -14,18 +14,18 @@ class Basket(models.Model):
 
 
 class Role(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=30)
 
 
 class CustomUser(AbstractUser):
-    address = models.CharField(max_length=255, blank=True, null=True)
+    address = models.CharField(max_length=90, blank=True, null=True)
     birth_date = models.DateField(null=True, blank=True)
     user_creation_time = models.DateTimeField(null=False, blank=False)
     user_update_time = models.DateTimeField(null=False, blank=False)
     phone_number = models.CharField(unique=True, max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=90, unique=False, null=False)
     credit_card = models.IntegerField(max_length=16, blank=True, null=True)
-    role = models.ForeignKey(Role, null=False, blank=False)
+    role = models.ForeignKey(Role, on_delete=models.PROTECT, null=False, blank=False)
     user_basket = models.ForeignKey(
         Basket, on_delete=models.CASCADE, null=True, blank=True
     )
@@ -44,7 +44,7 @@ class Category(models.Model):
 
 
 class Review(models.Model):
-    user = models.ForeignKey(CustomUser, null=False, blank=False)
+    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False)
     text = models.TextField(blank=False, null=False)
     creation_date = models.DateTimeField(null=False, blank=False)
     photo = models.ImageField(upload_to="review_photos/", blank=True, null=True)
@@ -115,13 +115,13 @@ class Pavilion(models.Model):
 
 
 class Wishlist(models.Model):
-    user = models.ForeignKey(CustomUser, null=False, blank=False)
+    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False)
     products = models.ManyToManyField(Product, related_name="wishlist_products")
     update_date = models.DateField(null=False, blank=False)
 
 
 class Order(models.Model):
-    user = models.ForeignKey(CustomUser, null=False, blank=False)
+    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False)
     products = models.ManyToManyField(Product, related_name="order_products")
     creation_date = models.DateTimeField(null=False, blank=False)
     payment_date = models.DateTimeField(null=False, blank=False)

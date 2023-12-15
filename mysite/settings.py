@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'myapp.apps.MyappConfig',
+    #'maypp',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +143,5 @@ JAZZMIN_SETTINGS = {
     'site_brand' : "Real vine is not juice",
     'copyright': "ebazar-shop.kg"
 }
+
+AUTH_USER_MODEL = 'myapp.CustomUser'

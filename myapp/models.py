@@ -122,7 +122,7 @@ class Wishlist(models.Model):
 
 
 class Order(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False)
+    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False, related_name='orders')
     products = models.ManyToManyField(Product, related_name="order_products")
     creation_date = models.DateTimeField(null=False, blank=False)
     payment_date = models.DateTimeField(null=False, blank=False)
@@ -131,3 +131,16 @@ class Order(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(1), MaxValueValidator(99999)],
     )
+    STATUS_CHOICES = [
+        ('WAITING_PAYMENT', 'Waiting Payment'),
+        ('PROCESSING', 'Processing'),
+        ('SHIPPED', 'Success'),
+        ('PAID', 'Paid'),
+        ('ERROR', 'Error'),
+        ('CANCELED', 'Canceled'),
+        ('REFUNDED', 'Refunded'),
+        ('PARTIALLY_SHIPPED', 'Partially shipped'),
+        ('ON_HOLD', 'On hold'),
+        ('SHIPPED', 'Shipped')
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='WAITING_PAYMENT')

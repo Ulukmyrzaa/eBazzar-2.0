@@ -38,8 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'myapp.apps.MyappConfig',
-    #'maypp',
+
+    'myapp'
+    
 ]
 
 MIDDLEWARE = [
@@ -79,10 +80,10 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     'default': {  
     'ENGINE': 'django.db.backends.postgresql',  
-    'NAME': 'megabazar',  
+    'NAME': 'ebazar',  
     'USER': 'postgres',  
     'PASSWORD': 'admin',  
-    'HOST': '127.0.0.1',  
+    'HOST': 'localhost',  
     'PORT': '5432'  
 }  
 

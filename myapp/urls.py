@@ -4,5 +4,6 @@ from myapp import *
 from . import views
 
 urlpatterns = [
-    path("", index)
+    path("", index, name='index'),
+    path("signup/", views.registration, name = "signup")
 ]

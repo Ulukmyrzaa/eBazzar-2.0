@@ -18,14 +18,15 @@ class Role(models.Model):
 
 
 class CustomUser(AbstractUser):
+    username = models.CharField(max_length=90, blank=True, null=True, unique=True)
     address = models.CharField(max_length=90, blank=True, null=True)
     birth_date = models.DateField(null=True, blank=True)
-    user_creation_time = models.DateTimeField(null=False, blank=False)
-    user_update_time = models.DateTimeField(null=False, blank=False)
+    user_creation_time = models.DateTimeField(null=True, blank=True)
+    user_update_time = models.DateTimeField(null=True, blank=True)
     phone_number = models.CharField(unique=True, max_length=15, blank=True, null=True)
-    email = models.EmailField(max_length=90, unique=False, null=False)
+    email = models.EmailField(max_length=90, unique=False, null=True)
     credit_card = models.IntegerField(blank=True, null=True)
-    role = models.ForeignKey(Role, on_delete=models.PROTECT, null=False, blank=False)
+    role = models.ForeignKey(Role, on_delete=models.PROTECT, null=True, blank=True)
     user_basket = models.ForeignKey(
         Basket, on_delete=models.CASCADE, null=True, blank=True
     )

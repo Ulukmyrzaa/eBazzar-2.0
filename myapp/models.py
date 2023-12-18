@@ -1,11 +1,13 @@
 from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.db.models.signals import pre_save
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-
+from django.dispatch import receiver
+from django.utils import timezone
 
 class Basket(models.Model):
     user = models.ForeignKey(
-        "CustomUser", on_delete=models.CASCADE, related_name="user_Basket"
+        "CustomUser", on_delete=models.CASCADE, related_name="user_basket"
     )
     creation_time = models.DateTimeField(auto_now_add=True)
     update_time = models.DateTimeField(auto_now_add=True)
@@ -21,13 +23,11 @@ class CustomUser(AbstractUser):
     username = models.CharField(max_length=90, blank=True, null=True, unique=True)
     address = models.CharField(max_length=90, blank=True, null=True)
     birth_date = models.DateField(null=True, blank=True)
-    user_creation_time = models.DateTimeField(null=True, blank=True)
-    user_update_time = models.DateTimeField(null=True, blank=True)
-    phone_number = models.CharField(unique=True, max_length=15, blank=True, null=True)
-    email = models.EmailField(max_length=90, unique=False, null=True)
+    update_time = models.DateTimeField(null=True, blank=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True)
     credit_card = models.IntegerField(blank=True, null=True)
     role = models.ForeignKey(Role, on_delete=models.PROTECT, null=True, blank=True)
-    user_basket = models.ForeignKey(
+    basket = models.ForeignKey(
         Basket, on_delete=models.CASCADE, null=True, blank=True
     )
     photo = models.ImageField(upload_to="user_photos/", blank=True, null=True)
@@ -36,6 +36,9 @@ class CustomUser(AbstractUser):
         Permission, related_name="custom_users", blank=True
     )
 
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+    
 
 class Category(models.Model):
     quantity = models.IntegerField(blank=False, null=False)
@@ -58,7 +61,6 @@ class Review(models.Model):
 
 class Product(models.Model):
     name = models.TextField(blank=False, null=False)
-    add_to_basket_time = models.DateTimeField(null=True, blank=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     photo = models.ImageField(upload_to="product_photos/", blank=True, null=True)
     quantity = models.IntegerField(
@@ -144,3 +146,18 @@ class Order(models.Model):
         ('SHIPPED', 'Shipped')
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='WAITING_PAYMENT')
+
+
+
+@receiver(pre_save,sender=CustomUser)
+def set_update_time(sender, instance, **kwargs):
+    instance.update_time = timezone.now()
+
+
+@receiver(pre_save, sender=Product)
+def create_basket(sender, instance, **kwargs):
+    if not Basket.objects.filter(user=instance.user).exists():
+        basket = Basket.objects.create(user=instance.user)
+        instance.add_tobasket_time = timezone.now()
+        instance.basket = basket
+    

@@ -1,4 +1,3 @@
-from django import forms
 from myapp.models import CustomUser
 from django.contrib.auth.forms import UserCreationForm
 

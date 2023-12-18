@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'myapp'
+    'myapp',
     
 ]
 
@@ -85,10 +85,10 @@ WSGI_APPLICATION = "mysite.wsgi.application"
 DATABASES = {
     'default': {  
     'ENGINE': 'django.db.backends.postgresql',  
-    'NAME': 'megabazar',  
+    'NAME': 'ebazar',  
     'USER': 'postgres',  
     'PASSWORD': 'admin',  
-    'HOST': '127.0.0.1',  
+    'HOST': 'localhost',  
     'PORT': '5432'  
 }  
 

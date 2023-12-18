@@ -36,16 +36,14 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-
-    'myapp',
-    
+    "jazzmin",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "myapp",
 ]
 
 MIDDLEWARE = [
@@ -85,10 +83,10 @@ WSGI_APPLICATION = "mysite.wsgi.application"
 DATABASES = {
     'default': {  
     'ENGINE': 'django.db.backends.postgresql',  
-    'NAME': 'ebazar',  
+    'NAME': 'megabazar',  
     'USER': 'postgres',  
     'PASSWORD': 'admin',  
-    'HOST': 'localhost',  
+    'HOST': '127.0.0.1',  
     'PORT': '5432'  
 }  
 

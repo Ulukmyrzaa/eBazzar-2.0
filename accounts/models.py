@@ -25,7 +25,7 @@ class User(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
         
               
-class CustomUser(AbstractUser):
+class Customer(AbstractUser):
     user = models.CharField(max_length=90, blank=True, null=True, unique=True)
     credit_card = models.IntegerField(blank=True, null=True)  
     total_item_purchased = models.IntegerField(default=0)
@@ -41,8 +41,8 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
     
-class UserSeller(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+class Seller(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     product_addes_ids = models.IntegerField(blank=True, null=True) 
     pavilion = models.CharField(max_length=90, blank=True, null=True)   
     is_active = models.BooleanField(default=True)

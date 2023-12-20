@@ -1,5 +1,5 @@
 
-from myapp.models import *
+from products.models import *
 
 def create_product(name, total_price, quantity, category_id, product_info_data):
     category = Category.objects.get(id=category_id)

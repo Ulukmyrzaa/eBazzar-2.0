@@ -7,7 +7,7 @@ from myapp.models import Product
 class Basket(models.Model):
     id = models.AutoField(primary_key=True)
     final_price = models.DecimalField(max_digits=10, decimal_places=2)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.PROTECT)
     creation_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -16,8 +16,8 @@ class Basket(models.Model):
 
 class BasketItem(models.Model):
     id = models.AutoField(primary_key=True)
-    basket = models.ForeignKey(Basket, on_delete=models.CASCADE)
-    product = models.OneToOneField(Product, on_delete=models.CASCADE)
+    basket = models.ForeignKey(Basket, on_delete=models.PROTECT)
+    product = models.OneToOneField(Product, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField()
     added_time = models.DateTimeField(auto_now_add=True)
 

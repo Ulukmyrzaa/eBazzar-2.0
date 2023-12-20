@@ -9,8 +9,6 @@ class Role(models.Model):
     
     
 class User(AbstractUser):   
-    user = models.CharField(max_length=90, blank=True, null=True, unique=True)
-           
     name = models.CharField(max_length=90, blank=True, null=True)
     surname =  models.CharField(max_length=90, blank=True, null=True)
     address = models.CharField(max_length=90, blank=True, null=True)
@@ -18,7 +16,8 @@ class User(AbstractUser):
     photo = models.ImageField(upload_to="user_photos/", blank=True, null=True)
     role_user = models.ForeignKey(Role, on_delete=models.PROTECT, null=True, blank=True)
     email = models.EmailField(max_length=60, unique=True)
-    
+    groups = models.ManyToManyField(Group, related_name="user_groups", blank=True)
+
     GENDER_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
@@ -26,13 +25,12 @@ class User(AbstractUser):
     ]    
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
     
-    USERNAME_FIELD = 'user'
     def __str__(self):
         return f"{self.first_name} {self.last_name}"    
           
               
 class Customer(models.Model):
-    #user = models.CharField(max_length=90, blank=True, null=True, unique=True)
+    user = models.OneToOneField(User, on_delete=models.PROTECT)
     credit_card = models.IntegerField(blank=True, null=True)  
     total_item_purchased = models.IntegerField(default=0)
     total_spend = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
@@ -40,7 +38,6 @@ class Customer(models.Model):
     basket = models.ForeignKey(
           'myapp.Basket', on_delete=models.CASCADE, related_name='user_basket', null=True
     )
-    groups = models.ManyToManyField(Group, related_name="custom_users", blank=True)
     user_permissions = models.ManyToManyField(
         Permission, related_name="custom_users", blank=True
     )
@@ -48,7 +45,7 @@ class Customer(models.Model):
         return f"{self.first_name} {self.last_name}"
     
 class Seller(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.PROTECT)
     product_addes_ids = models.IntegerField(blank=True, null=True) 
     pavilion = models.CharField(max_length=90, blank=True, null=True)   
     is_active = models.BooleanField(default=True)

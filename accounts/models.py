@@ -18,6 +18,9 @@ class User(AbstractUser):
     email = models.EmailField(max_length=60, unique=True)
     groups = models.ManyToManyField(Group, related_name="user_groups", blank=True)
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
     GENDER_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
@@ -26,7 +29,8 @@ class User(AbstractUser):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
     
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"    
+        full_name = f"{self.name} {self.surname}" if self.name and self.surname else "Unnamed User"
+        return f"{full_name} - {self.email}"
           
               
 class Customer(models.Model):

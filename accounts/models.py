@@ -8,7 +8,9 @@ class Role(models.Model):
     user_profile = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
     
     
-class User(models.Model):              
+class User(AbstractUser):   
+    user = models.CharField(max_length=90, blank=True, null=True, unique=True)
+           
     name = models.CharField(max_length=90, blank=True, null=True)
     surname =  models.CharField(max_length=90, blank=True, null=True)
     address = models.CharField(max_length=90, blank=True, null=True)
@@ -23,14 +25,18 @@ class User(models.Model):
         ('O', 'Other'),
     ]    
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
-        
+    
+    USERNAME_FIELD = 'user'
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"    
+          
               
-class Customer(AbstractUser):
-    user = models.CharField(max_length=90, blank=True, null=True, unique=True)
+class Customer(models.Model):
+    #user = models.CharField(max_length=90, blank=True, null=True, unique=True)
     credit_card = models.IntegerField(blank=True, null=True)  
     total_item_purchased = models.IntegerField(default=0)
     total_spend = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
-    #orders = models.OneToOneField(Order, on_delete=models.SET_NULL, null=True, blank=True)
+    orders_user = models.OneToOneField('myapp.Order', on_delete=models.SET_NULL, null=True, blank=True)
     basket = models.ForeignKey(
           'myapp.Basket', on_delete=models.CASCADE, related_name='user_basket', null=True
     )

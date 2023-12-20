@@ -148,4 +148,4 @@ JAZZMIN_SETTINGS = {
     "copyright": "ebazar-shop.kg",
 }
 
-AUTH_USER_MODEL = "accounts.CustomUser"
+AUTH_USER_MODEL = "accounts.User"

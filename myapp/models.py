@@ -2,7 +2,7 @@ from django.db.models.signals import pre_save
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.dispatch import receiver
-from accounts.models import CustomUser
+from accounts.models import *
 from django.utils import timezone
 
 
@@ -17,7 +17,7 @@ class Category(models.Model):
 
 class Basket(models.Model):
     user = models.ForeignKey(
-        "accounts.CustomUser", on_delete=models.CASCADE, related_name="user_basket"
+        "accounts.Customer", on_delete=models.CASCADE, related_name="user_basket"
     )
     creation_time = models.DateTimeField(auto_now_add=True)
     update_time = models.DateTimeField(auto_now_add=True)
@@ -57,8 +57,8 @@ class Product(models.Model):
 
 
 class Order(models.Model):
-    user = models.ForeignKey(
-        CustomUser,
+    user_profile = models.ForeignKey(
+        Customer,
         on_delete=models.PROTECT,
         null=False,
         blank=False,
@@ -137,7 +137,7 @@ class ProductInfo(models.Model):
 #     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='WAITING_PAYMENT')
 
 
-@receiver(pre_save, sender=CustomUser)
+@receiver(pre_save, sender=Customer)
 def set_update_time(sender, instance, **kwargs):
     instance.update_time = timezone.now()
 

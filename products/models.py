@@ -1,61 +1,125 @@
+import datetime
 from django.db.models.signals import pre_save
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models import Sum
+from django.core.validators import MaxValueValidator
 from django.dispatch import receiver
-from accounts.models import *
-from django.utils import timezone
+from django.forms import ValidationError
+
+
+STATUS_CHOICES = [
+    ("ON_CREATION", "On creation"),
+    ("ON_REVIEW", "On review"),
+    ("IN_STOCK", "In stock"),
+    ("UNAVILABLE", "Unavailable"),
+    ("SOLD", "Sold"),
+]
 
 
 class Category(models.Model):
-    quantity = models.IntegerField(blank=False, null=False)
-    category_photo = models.ImageField(
-        upload_to="category_photos/", blank=True, null=True
-    )
+    name = models.CharField(max_length=100, blank=False, null=False)
+    quantity = models.PositiveIntegerField(blank=False, null=False)
+
+    def total_product_quantity_in_category(self, status=None):
+        if status is None:
+            return self.product_set.count()
+        else:
+            return self.product_set.filter(product_details__status=status).count()
 
 
 class Product(models.Model):
     name = models.TextField(blank=False, null=False)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
     photo = models.ImageField(upload_to="product_photos/", blank=True, null=True)
-    quantity = models.IntegerField(
-        validators=[MaxValueValidator(999)], blank=False, null=False
-    )
-    product_category = models.ForeignKey(
-        "Category", on_delete=models.CASCADE, related_name="category_products"
-    )
     product_info = models.OneToOneField(
-        "ProductInfo",
+        "ProductDetails",
         on_delete=models.CASCADE,
-        related_name="product_info_for_product",
+        related_name="product_details",
         null=False,
         blank=False,
     )
 
+    # def average_rating(self):
+    #     return self.product_info.reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
 
-class ProductInfo(models.Model):
+
+class ProductDetails(models.Model):
     descritpion = models.CharField(max_length=500, blank=True, null=True)
-    quantity_available = models.IntegerField(
-        validators=[MaxValueValidator(9999)], blank=False, null=False
-    )
+    prod_date = models.DateField(null=False, blank=False)
+    exp_date = models.DateField(null=False, blank=False)
+    views = models.PositiveIntegerField(default=0, blank=False, null=False)
+    total_items_sold = models.PositiveIntegerField(default=0, blank=True, null=True)
     product = models.OneToOneField(
         Product, on_delete=models.CASCADE, null=True, blank=True
     )
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    arrived_date = models.DateField(null=False, blank=False)
-    prod_date = models.DateField(null=False, blank=False)
-    exp_date = models.DateField(null=False, blank=False)
-    status = models.BooleanField(null=False, blank=False)
-    rating = models.DecimalField(
-        max_digits=2,
-        decimal_places=1,
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    product_category = models.ForeignKey(
+        "Category", on_delete=models.PROTECT, related_name="category_products"
     )
+    quantity_available = models.IntegerField(default=0, blank=False, null=False)
     # reviews = models.ManyToManyField(Review, related_name="product_reviews")
-    sold = models.IntegerField(
-        validators=[MaxValueValidator(99999)], blank=True, null=True
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="On creation"
     )
 
+    def days_until_expiration(self):
+        today = datetime.now().date()
+        remaining_days = (self.exp_date - today).days
+        return remaining_days if remaining_days >= 0 else 0
 
+    def clean(self):
+        if self.prod_date and self.exp_date:
+            if self.prod_date >= self.exp_date - datetime.timedelta(days=2):
+                raise ValidationError(
+                    "Дата производства должна быть не ранее, чем на 2 дня, чем дата просрочки."
+                )
+
+
+class SellerProductDetails(models.Model):
+    arrived_date = models.DateField(null=False, blank=False)
+    update_at = models.DateTimeField(auto_now=True)
+    total_money_earned = models.FloatField(max_digits=10, decimal_places=4)
+    buy_sum = models.FloatField(max_digits=10, decimal_places=4)
+
+    def total_profit(self):
+        return self.total_money_earned - (
+            self.sales.aggregate(total_price_sold=Sum("price_sold"))["total_price_sold"]
+            or 0
+        )
+
+    def total_profit_in_period(self, start_date, end_date):
+        return self.sales.filter(sold_time__range=(start_date, end_date)).aggregate(
+            total_price_sold=Sum("price_sold")
+        )["total_price_sold"]
+
+    # pavilion = models.OneToOneField(Pavilion,  related_name="pavilion_product")
+
+
+class Sales(models.Model):
+    seller_product_details = models.ForeignKey(
+        SellerProductDetails, on_delete=models.CASCADE, related_name="sales"
+    )
+    sold_time = models.DateTimeField()
+    price_sold = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
+
+
+
+@receiver(pre_save, sender=ProductDetails)
+def validate_product_details(sender, instance, **kwargs):
+    # Проверка срока годности
+    if instance.prod_date > instance.arrived_date:
+        raise ValidationError("Дата производства не может быть раньше, чем дата привоза.")
+
+@receiver(pre_save, sender=Product)
+def validate_product(sender, instance, **kwargs):
+    # Проверка цены
+    if instance.price < 0 or instance.price > 99999:
+        raise ValidationError("Цена должна быть в диапазоне от 0 до 99999.")
+
+@receiver(pre_save, sender=Sales)
+def validate_sold_price(sender, instance, **kwargs):
+    # Проверка проданной цены
+    if instance.price_sold < 0 or instance.price_sold > 99999:
+        raise ValidationError("Проданная цена должна быть в диапазоне от 0 до 99999.")
 
 # class Review(models.Model):
 #     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False)
@@ -67,7 +131,7 @@ class ProductInfo(models.Model):
 #         decimal_places=1,
 #         validators=[MinValueValidator(1), MaxValueValidator(5)],
 #     )
-    
+
 
 # class Pavilion(models.Model):
 #     name = models.TextField(blank=False, null=False)

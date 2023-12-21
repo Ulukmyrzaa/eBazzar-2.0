@@ -19,10 +19,10 @@ from django.urls import path, include
 
 from django.conf import settings
 from django.conf.urls.static import static
-from myapp.views import *
+from products.views import *
 
 urlpatterns = [
+    path("", include("accounts.urls")),
     path('admin/', admin.site.urls),
-    path("", include("myapp.urls")),
     path("user/", include("accounts.urls"))
 ]

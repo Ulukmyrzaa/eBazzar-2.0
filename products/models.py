@@ -13,30 +13,6 @@ class Category(models.Model):
     )
 
 
-
-
-class Basket(models.Model):
-    user = models.ForeignKey(
-        "accounts.Customer", on_delete=models.CASCADE, related_name="user_basket"
-    )
-    creation_time = models.DateTimeField(auto_now_add=True)
-    update_time = models.DateTimeField(auto_now_add=True)
-    products = models.ManyToManyField("Product", related_name="basket_products")
-    categories = models.ManyToManyField("Category", related_name="basket_category")
-
-
-# class Review(models.Model):
-#     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False)
-#     text = models.TextField(blank=False, null=False)
-#     creation_date = models.DateTimeField(null=False, blank=False)
-#     photo = models.ImageField(upload_to="review_photos/", blank=True, null=True)
-#     rating = models.DecimalField(
-#         max_digits=2,
-#         decimal_places=1,
-#         validators=[MinValueValidator(1), MaxValueValidator(5)],
-#     )
-
-
 class Product(models.Model):
     name = models.TextField(blank=False, null=False)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -53,24 +29,6 @@ class Product(models.Model):
         related_name="product_info_for_product",
         null=False,
         blank=False,
-    )
-
-
-class Order(models.Model):
-    user_profile = models.ForeignKey(
-        Customer,
-        on_delete=models.PROTECT,
-        null=False,
-        blank=False,
-        related_name="orders",
-    )
-    products = models.ManyToManyField(Product, related_name="order_products")
-    creation_date = models.DateTimeField(null=False, blank=False)
-    payment_date = models.DateTimeField(null=False, blank=False)
-    total_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        validators=[MinValueValidator(1), MaxValueValidator(99999)],
     )
 
 
@@ -97,6 +55,19 @@ class ProductInfo(models.Model):
         validators=[MaxValueValidator(99999)], blank=True, null=True
     )
 
+
+
+# class Review(models.Model):
+#     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False)
+#     text = models.TextField(blank=False, null=False)
+#     creation_date = models.DateTimeField(null=False, blank=False)
+#     photo = models.ImageField(upload_to="review_photos/", blank=True, null=True)
+#     rating = models.DecimalField(
+#         max_digits=2,
+#         decimal_places=1,
+#         validators=[MinValueValidator(1), MaxValueValidator(5)],
+#     )
+    
 
 # class Pavilion(models.Model):
 #     name = models.TextField(blank=False, null=False)

@@ -1,5 +1,6 @@
 # created by virtualenv automatically
 __pycache__
+migrations
 db.sqlite3
 .pyc
 .log
@@ -9,3 +10,4 @@ media
 .idea
 .idea/**aws.xml
 .env
+env

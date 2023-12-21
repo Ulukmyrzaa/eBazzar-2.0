@@ -1,10 +1,8 @@
 from django.shortcuts import render
-from myapp.models import *
+from products.models import *
 from .utils import *
 
 
-def index(request):
-    return render(request, 'core/index.html')
 
 def add_product(request):
     if request.method == 'POST':

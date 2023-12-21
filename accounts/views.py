@@ -4,6 +4,9 @@ from accounts.form import *
 from django.contrib import messages
 
 
+def index(request):
+    return render(request, 'index.html')
+
 def registration(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST or None)

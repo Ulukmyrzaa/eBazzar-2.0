@@ -1,11 +1,13 @@
+from datetime import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
-from django.db.models.signals import pre_save
 from django.db import models
+from django.dispatch import receiver
 
 class Role(models.Model):
     name = models.CharField(max_length=90, blank=True, null=True)
-    user_profile = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
+    user_profile = models.ForeignKey('accounts.User', on_delete=models.PROTECT)
+    group = models.ManyToManyField(Group, related_name="roles_group", blank=True)
     
     
 class User(AbstractUser):   
@@ -16,7 +18,7 @@ class User(AbstractUser):
     photo = models.ImageField(upload_to="user_photos/", blank=True, null=True)
     role_user = models.ForeignKey(Role, on_delete=models.PROTECT, null=True, blank=True)
     email = models.EmailField(max_length=60, unique=True)
-    groups = models.ManyToManyField(Group, related_name="user_groups", blank=True)
+    update_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -38,9 +40,9 @@ class Customer(models.Model):
     credit_card = models.IntegerField(blank=True, null=True)  
     total_item_purchased = models.IntegerField(default=0)
     total_spend = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
-    orders_user = models.OneToOneField('myapp.Order', on_delete=models.SET_NULL, null=True, blank=True)
+    orders_user = models.OneToOneField('carts.Order', on_delete=models.SET_NULL, null=True, blank=True)
     basket = models.ForeignKey(
-          'myapp.Basket', on_delete=models.CASCADE, related_name='user_basket', null=True
+          'carts.Basket', on_delete=models.CASCADE, related_name='user_basket', null=True
     )
     user_permissions = models.ManyToManyField(
         Permission, related_name="custom_users", blank=True

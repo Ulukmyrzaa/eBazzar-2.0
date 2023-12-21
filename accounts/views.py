@@ -24,7 +24,7 @@ def registration(request):
         form = RegisterForm()
 
     context = {'form': form}
-    return render(request, 'core/signup.html', context)
+    return render(request, 'accounts/signup.html', context)
 
 def user_login(request):
     if request.method == 'POST':
@@ -37,4 +37,4 @@ def user_login(request):
         form = LoginForm()
 
     context = {'form': form}
-    return render(request, 'core/signin.html', context)
+    return render(request, 'accounts/signin.html', context)

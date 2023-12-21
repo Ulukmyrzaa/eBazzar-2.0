@@ -17,8 +17,8 @@ STATUS_CHOICES = [
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, blank=False, null=False)
-    quantity = models.PositiveIntegerField(blank=False, null=False)
+    name = models.CharField(max_length=100)
+    quantity = models.PositiveIntegerField(default = 0, blank=False, null=False)
 
     def total_product_quantity_in_category(self, status=None):
         if status is None:
@@ -28,7 +28,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    name = models.TextField(blank=False, null=False)
+    name = models.TextField()
     price = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
     photo = models.ImageField(upload_to="product_photos/", blank=True, null=True)
     product_info = models.OneToOneField(
@@ -77,8 +77,8 @@ class ProductDetails(models.Model):
 class SellerProductDetails(models.Model):
     arrived_date = models.DateField(null=False, blank=False)
     update_at = models.DateTimeField(auto_now=True)
-    total_money_earned = models.FloatField(max_digits=10, decimal_places=4)
-    buy_sum = models.FloatField(max_digits=10, decimal_places=4)
+    total_money_earned = models.FloatField()
+    buy_sum = models.FloatField()
 
     def total_profit(self):
         return self.total_money_earned - (

@@ -1,4 +1,4 @@
-from django.shortcuts import render, form, redirect
+from django.shortcuts import render, redirect
 from django.views import View
 from products.models import *
 from .utils import *

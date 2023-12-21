@@ -106,16 +106,3 @@ class ProductInfo(models.Model):
 #         ('SHIPPED', 'Shipped')
 #     ]
 #     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='WAITING_PAYMENT')
-
-
-@receiver(pre_save, sender=Customer)
-def set_update_time(sender, instance, **kwargs):
-    instance.update_time = timezone.now()
-
-
-@receiver(pre_save, sender=Product)
-def create_basket(sender, instance, **kwargs):
-    if not Basket.objects.filter(user=instance.user).exists():
-        basket = Basket.objects.create(user=instance.user)
-        instance.add_tobasket_time = timezone.now()
-        instance.basket = basket

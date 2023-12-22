@@ -1,11 +1,31 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.views import TemplateView
+from django.contrib.auth.views import TemplateView, LogoutView
+from flask import request
 from accounts.form import *
+from django.urls import reverse
 
 
 def index(request):
     return render(request, 'index.html')
+
+
+class ProfileView(TemplateView):
+    template_name = 'accounts/profile.html'
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        form = ProfileForm(instance=user)
+        context = {'user': user, 'form': form}
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        form = ProfileForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+        context = {'user': user, 'form': form}
+        return render(request, self.template_name, context)
 
 class Account(TemplateView):
     template_name = 'accounts/signup.html'
@@ -24,7 +44,7 @@ class Account(TemplateView):
 
             if authenticated_user is not None:
                 login(request, authenticated_user)
-                return redirect('index')
+                return redirect('/')
 
         context = self.get_context_data(form=form)
         return self.render_to_response(context)
@@ -34,40 +54,63 @@ class Account(TemplateView):
         context = self.get_context_data(form=form)
         return self.render_to_response(context)
 
-# def registration(request):
-#     if request.method == 'POST':
-#         form = RegisterForm(request.POST or None)
-#         if form.is_valid():
-#             user = form.save()
-#             email = form.cleaned_data.get("email")
+  
+class LoginView(TemplateView):
+    template_name = 'accounts/signin.html'
+    
+    def get(self, request, *args, **kwargs):
+        form = LoginForm()
+        context = {'form': form}
+        return render(request, self.template_name, context)
 
-#             # Аутентификация только что зарегистрированного пользователя
-#             authenticated_user = authenticate(request, email=email, password=form.cleaned_data['password1'])
-
-#             if authenticated_user is not None:
-#                 login(request, authenticated_user)
-#                 return redirect('index')
-#     else:
-#         form = RegisterForm()
-
-#     context = {'form': form}
-#     return render(request, 'accounts/signup.html', context)
-
-
-def user_login(request):
-    if request.method == 'POST':
+    def post(self, request, *args, **kwargs):
         form = LoginForm(request, request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('/')
-    else:
-        form = LoginForm()
-
-    context = {'form': form}
-    return render(request, 'accounts/signin.html', context)
+            return redirect(reverse('profile'))
+        
+        context = {'form': form}
+        return render(request, 'profile', context)        
 
 
-def user_logout(request):
-    logout(request)
-    return render(request, 'accounts/signin.html')
+class LogoutView(LogoutView):
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        return redirect('/')
+
+
+class EditView(TemplateView):
+    template_name = 'accounts/edit_profile.html'
+    form_class = EditForm
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(instance=request.user)
+        context = {'form': form}
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')  
+
+        context = {'form': form}
+        return render(request, self.template_name, context)
+    
+    
+class DeleteView(TemplateView):
+    template_name = 'accounts/delete_user.html' 
+    form_class = DeleteForm  
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, instance=request.user)
+        if form.is_valid() and form.cleaned_data['confirm_deletion']:
+            user = request.user
+            user.delete()
+            return redirect('index')  
+        return render(request, self.template_name, {'form': form})    

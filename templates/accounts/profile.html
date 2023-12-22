@@ -1,0 +1,22 @@
+<!-- profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+</head>
+<body>
+    <h2>User Profile</h2>
+    {% if user.is_authenticated %}
+        <form method="post" action="{% url 'profile' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+         {{ form.as_p }}
+            <button type="submit">Save changes</button>
+        </form>
+    {% else %}
+    <p>Please log in to view and edit your profile.</p>
+    {% endif %}
+</body>
+</html>

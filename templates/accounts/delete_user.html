@@ -1,0 +1,6 @@
+<h2>Delete User</h2>
+  <form method="post" action="{% url 'delete_user' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Delete User</button>
+  </form>

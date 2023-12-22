@@ -11,3 +11,5 @@ media
 .idea/**aws.xml
 .env
 env
+.env
+.vscode/settings.json

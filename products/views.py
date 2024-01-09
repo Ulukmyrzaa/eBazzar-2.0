@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views.generic.edit import CreateView
-from django.views import View
+from django.views.generic import CreateView, ListView, UpdateView, DeleteView
 from products.models import *
 from .utils import *
 from .form import *
@@ -9,48 +8,32 @@ from .form import *
 class CreateProductView(CreateView):
     model = Product
     form_class = CombinedProductForm
-    template_name = 'create_product.html'
+    template_name = 'products/create_product.html'
     success_url = '/product-list/'
 
-    def post(self, request):
-        form = ProductForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('product_list')
-        return render(request, 'create_product.html', {'form': form})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['combined_form'] = self.get_form()
+        return context
     
-    def get(self, request):
-        form = ProductForm()
-        return render(request, 'create_product.html', {'form': form})
 
+class ProductListView(ListView):
+    model = Product
+    template_name = 'product_list.html'
+    context_object_name = 'products'
 
-# Классовое представление для чтения списка продуктов
-class ProductListView(View):
-    def get(self, request):
-        products = Product.objects.all()
-        return render(request, 'product_list.html', {'products': products})
+class UpdateProductView(UpdateView):
+    model = Product
+    form_class = CombinedProductForm
+    template_name = 'update_product.html'
+    context_object_name = 'product'
+    success_url = '/product-list/'
 
-# Классовое представление для обновления продукта
-class UpdateProductView(View):
-    def get(self, request, product_id):
-        product = Product.objects.get(pk=product_id)
-        form = ProductForm(instance=product)
-        return render(request, 'update_product.html', {'form': form})
-
-    def post(self, request, product_id):
-        product = Product.objects.get(pk=product_id)
-        form = ProductForm(request.POST, instance=product)
-        if form.is_valid():
-            form.save()
-            return redirect('product_list')
-        return render(request, 'update_product.html', {'form': form})
-
-# Классовое представление для удаления продукта
-class DeleteProductView(View):
-    def get(self, request, product_id):
-        product = Product.objects.get(pk=product_id)
-        product.delete()
-        return redirect('product_list')
+class DeleteProductView(DeleteView):
+    model = Product
+    template_name = 'delete_product.html'
+    context_object_name = 'product'
+    success_url = '/product-list/'
     
 
 

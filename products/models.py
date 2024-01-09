@@ -5,7 +5,9 @@ from django.db.models import Sum
 from django.core.validators import MaxValueValidator
 from django.dispatch import receiver
 from django.forms import ValidationError
-
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import now
 
 STATUS_CHOICES = [
     ("ON_CREATION", "On creation"),
@@ -18,19 +20,30 @@ STATUS_CHOICES = [
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
-    quantity = models.PositiveIntegerField(default = 0, blank=False, null=False)
+    slug = models.SlugField(max_length=100, unique=True)
+    category_image = models.ImageField(upload_to="category_images/")
 
-    def total_product_quantity_in_category(self, status=None):
-        if status is None:
-            return self.product_set.count()
-        else:
-            return self.product_set.filter(product_details__status=status).count()
+    @property
+    def get_number_of_products(self):
+        return self.product_set.filter(details__status="IN_STOCK").count()
+
+    class Meta:
+        ordering = ("name",)
+        verbose_name = "category"
+        verbose_name_plural = "categories"
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse("category", args=[self.slug])
 
 
 class Product(models.Model):
     name = models.TextField()
+    slug = models.SlugField(max_length=100, unique=True)
     price = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
-    photo = models.ImageField(upload_to="product_photos/", blank=True, null=True)
+    image = models.ImageField(upload_to="product_images/", blank=True, null=True)
     product_info = models.OneToOneField(
         "ProductDetails",
         on_delete=models.CASCADE,
@@ -38,7 +51,6 @@ class Product(models.Model):
         null=False,
         blank=False,
     )
-
 
     def save(self, commit=True):
         product = self.product_form.save(commit=False)
@@ -56,26 +68,31 @@ class Product(models.Model):
 
 
 class ProductDetails(models.Model):
-    descritpion = models.CharField(max_length=500, blank=True, null=True)
-    prod_date = models.DateField(default= datetime.datetime.now(), null=False, blank=False)
+    slug = models.SlugField(max_length=255, unique=True)
+    description = models.CharField(max_length=500, blank=True, null=True)
+    prod_date = models.DateField(
+        default=now, null=False, blank=False
+    )
     exp_date = models.DateField(null=False, blank=False)
     total_views = models.PositiveIntegerField(default=0, blank=False, null=False)
     total_items_sold = models.PositiveIntegerField(default=0, blank=True, null=True)
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="On creation"
+    )
     product = models.OneToOneField(
         Product, on_delete=models.CASCADE, null=True, blank=True
     )
     product_category = models.ForeignKey(
         "Category", on_delete=models.PROTECT, related_name="category_products"
     )
-    quantity_available = models.IntegerField(default=0, blank=False, null=False)
     # reviews = models.ManyToManyField(Review, related_name="product_reviews")
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="On creation"
-    )
+
+    def get_absolute_url(self):
+        return reverse("product_detail", args=[self.slug])
 
     def days_until_expiration(self):
-        today = datetime.datetime.now()
-        remaining_days = (self.exp_date - today).days
+
+        remaining_days = (self.exp_date - now).days
         return remaining_days if remaining_days >= 0 else 0
 
     def clean(self):
@@ -87,11 +104,12 @@ class ProductDetails(models.Model):
 
 
 class SellerProductDetails(models.Model):
-    arrived_date = models.DateField(null=False, blank=False)
-    total_unique_views = models.PositiveIntegerField(default=0, blank=False, null=False)
+  #  created_by = models.ForeignKey()
     update_at = models.DateTimeField(auto_now=True)
-    total_money_earned = models.FloatField()
-    buy_sum = models.FloatField()
+    arrived_date = models.DateField(null=False, blank=False)
+    total_available = models.IntegerField(default=0, blank=False, null=False)
+    total_unique_views = models.PositiveIntegerField(default=0, blank=False, null=False)
+    total_money_earned = models.FloatField(default=0, blank=False, null=False)
 
     def total_profit(self):
         return self.total_money_earned - (
@@ -104,23 +122,33 @@ class SellerProductDetails(models.Model):
             total_price_sold=Sum("price_sold")
         )["total_price_sold"]
 
+    def average_price_sold(self):
+        total_sales = self.sales.count()
+        total_price_sold = self.sales.aggregate(total=Sum("price_sold"))["total"] or 0
+        if total_sales > 0:
+            return total_price_sold / total_sales
+        else:
+            return 0
+
     # pavilion = models.OneToOneField(Pavilion,  related_name="pavilion_product")
 
 
 class Sales(models.Model):
+    sold_time = models.DateTimeField()
+    price_sold = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
     seller_product_details = models.ForeignKey(
         SellerProductDetails, on_delete=models.CASCADE, related_name="sales"
     )
-    sold_time = models.DateTimeField()
-    price_sold = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
-
 
 
 @receiver(pre_save, sender=ProductDetails)
 def validate_product_details(sender, instance, **kwargs):
     # Проверка срока годности
     if instance.prod_date > instance.arrived_date:
-        raise ValidationError("Дата производства не может быть раньше, чем дата привоза.")
+        raise ValidationError(
+            "Дата производства не может быть раньше, чем дата привоза."
+        )
+
 
 @receiver(pre_save, sender=Product)
 def validate_product(sender, instance, **kwargs):
@@ -128,11 +156,13 @@ def validate_product(sender, instance, **kwargs):
     if instance.price < 0 or instance.price > 99999:
         raise ValidationError("Цена должна быть в диапазоне от 0 до 99999.")
 
+
 @receiver(pre_save, sender=Sales)
 def validate_sold_price(sender, instance, **kwargs):
     # Проверка проданной цены
     if instance.price_sold < 0 or instance.price_sold > 99999:
         raise ValidationError("Проданная цена должна быть в диапазоне от 0 до 99999.")
+
 
 # class Review(models.Model):
 #     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False)

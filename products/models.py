@@ -39,15 +39,27 @@ class Product(models.Model):
         blank=False,
     )
 
+
+    def save(self, commit=True):
+        product = self.product_form.save(commit=False)
+        product_details = self.product_details_form.save(commit=False)
+
+        if commit:
+            product.save()
+            product_details.product = product
+            product_details.save()
+
+        return product
+
     # def average_rating(self):
     #     return self.product_info.reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
 
 
 class ProductDetails(models.Model):
     descritpion = models.CharField(max_length=500, blank=True, null=True)
-    prod_date = models.DateField(null=False, blank=False)
+    prod_date = models.DateField(default= datetime.datetime.now(), null=False, blank=False)
     exp_date = models.DateField(null=False, blank=False)
-    views = models.PositiveIntegerField(default=0, blank=False, null=False)
+    total_views = models.PositiveIntegerField(default=0, blank=False, null=False)
     total_items_sold = models.PositiveIntegerField(default=0, blank=True, null=True)
     product = models.OneToOneField(
         Product, on_delete=models.CASCADE, null=True, blank=True
@@ -62,7 +74,7 @@ class ProductDetails(models.Model):
     )
 
     def days_until_expiration(self):
-        today = datetime.now().date()
+        today = datetime.datetime.now()
         remaining_days = (self.exp_date - today).days
         return remaining_days if remaining_days >= 0 else 0
 
@@ -76,6 +88,7 @@ class ProductDetails(models.Model):
 
 class SellerProductDetails(models.Model):
     arrived_date = models.DateField(null=False, blank=False)
+    total_unique_views = models.PositiveIntegerField(default=0, blank=False, null=False)
     update_at = models.DateTimeField(auto_now=True)
     total_money_earned = models.FloatField()
     buy_sum = models.FloatField()

@@ -1,14 +1,16 @@
 from django.shortcuts import render, redirect
+from django.views.generic.edit import CreateView
 from django.views import View
 from products.models import *
 from .utils import *
 from .form import *
 
 
-class CreateProductView(View):
-    def get(self, request):
-        form = ProductForm()
-        return render(request, 'create_product.html', {'form': form})
+class CreateProductView(CreateView):
+    model = Product
+    form_class = CombinedProductForm
+    template_name = 'create_product.html'
+    success_url = '/product-list/'
 
     def post(self, request):
         form = ProductForm(request.POST)
@@ -16,6 +18,11 @@ class CreateProductView(View):
             form.save()
             return redirect('product_list')
         return render(request, 'create_product.html', {'form': form})
+    
+    def get(self, request):
+        form = ProductForm()
+        return render(request, 'create_product.html', {'form': form})
+
 
 # Классовое представление для чтения списка продуктов
 class ProductListView(View):

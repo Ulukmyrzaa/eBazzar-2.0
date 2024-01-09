@@ -1,4 +1,7 @@
 from django.contrib import admin
-from accounts.models import User
+from .models import *
 
-admin.site.register(User)
+admin.site.register(Sales)
+admin.site.register(Product)
+admin.site.register(ProductDetails)
+admin.site.register(SellerProductDetails)

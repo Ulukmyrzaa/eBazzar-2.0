@@ -68,11 +68,12 @@
                     Account
                   </a>
                   <div class="dropdown-menu drop-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{% url 'profile' %}">Profile</a>
                     <a class="dropdown-item" href="wish.html">Wishing list</a>
                     <a class="dropdown-item" href="order.html">Orders</a>
-                    <a class="dropdown-item" href="blog-details.html">Blog Details</a>
+                    <a class="dropdown-item" href="{% url 'delete_user' %}">Delete Profile</a>
                     <a class="dropdown-item" href="basket.html">Shopping Cart</a>
-                    <a class="dropdown-item" href="settings.html">Settings</a>
+                    <a class="dropdown-item" href="{% url 'edit_profile' %}">Edit Profile</a>
                     <a class="dropdown-item" href="{% url 'signout' %}">Sign out</a>
                   </div>
                 </li>

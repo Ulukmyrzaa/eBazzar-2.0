@@ -35,7 +35,7 @@ class User(AbstractUser):
         return f"{full_name} - {self.email}"
           
               
-class Customer(models.Model):
+class UserDetails(models.Model):
     user = models.OneToOneField(User, on_delete=models.PROTECT)
     credit_card = models.IntegerField(blank=True, null=True)  
     total_item_purchased = models.IntegerField(default=0)
@@ -50,9 +50,4 @@ class Customer(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
     
-class Seller(models.Model):
-    user = models.OneToOneField(User, on_delete=models.PROTECT)
-    product_addes_ids = models.IntegerField(blank=True, null=True) 
-    pavilion = models.CharField(max_length=90, blank=True, null=True)   
-    is_active = models.BooleanField(default=True)
-    last_active = models.DateTimeField(auto_now=True)
+    

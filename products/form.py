@@ -5,35 +5,56 @@ from .models import *
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = "__all__"
-
-    class createProduct:
-        model = Product
-        fields = "name, price"
+        fields = ["name", "price"]
 
 
 class ProductDetailsForm(forms.ModelForm):
     class Meta:
         model = ProductDetails
-        fields = "__all__"
+        fields = ["slug", "description", "prod_date", "exp_date", "product_category"]
 
-    class createProductDetails:
-        model = Product
-        fields = "description, prod_date, exp_date, product_category, quanity_available"
+
+ProductDetailsFormSet = forms.inlineformset_factory(
+    Product, ProductDetails, form=ProductDetailsForm, extra=1
+)
 
 
 class CombinedProductForm(forms.ModelForm):
+    name = forms.CharField(required=True)
+    price = forms.DecimalField(required=True)
+
+    slug = forms.CharField(required=True)
+    description = forms.CharField(required=True)
+    prod_date = forms.DateField(required=True)
+    exp_date = forms.DateField(required=True)
+    product_category = forms.CharField(required=True)
+
+    class Meta:
+        model = Product
+        fields = []
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.product_form = ProductForm(*args, **kwargs)
-        self.product_details_form = ProductDetailsForm(*args, **kwargs)
+        self.fields.update(ProductForm().fields)
+        self.fields.update(ProductDetailsForm().fields)
+        self.product_details_formset = ProductDetailsFormSet(
+            *args, instance=self.instance, prefix="product_details"
+        )
 
     def is_valid(self):
-        return self.product_form.is_valid() and self.product_details_form.is_valid()
+        return super().is_valid() and self.product_details_formset.is_valid()
 
+    def save(self, commit=True):
+        product = super().save(commit=commit)
+
+        if commit:
+            self.product_details_formset.instance = product
+            self.product_details_formset.save()
+
+        return product
 
     # class Meta:
-    #     model = ProductDetails 
+    #     model = ProductDetails
     #     fields = [
     #         "name",
     #         "price",

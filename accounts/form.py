@@ -2,6 +2,7 @@ from django import forms
 from accounts.models import *
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm
 
+
 class AddressForm(forms.ModelForm):
     class Meta:
         model = Address
@@ -114,13 +115,12 @@ class EditForm(UserChangeForm):
     
         
 class DeleteForm(forms.ModelForm):
-    address =  Address()
     class Meta:
         model = User
-        fields = []  # Пустой список полей, так как мы не редактируем существующие поля пользователя
+        fields = ['confirm_deletion']
 
     confirm_deletion = forms.BooleanField(
         required=True,
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         help_text='Подтвердите удаление пользователя'
-    ) 
+    )

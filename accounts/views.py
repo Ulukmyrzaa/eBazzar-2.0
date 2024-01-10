@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.views import TemplateView, LogoutView
-from flask import request
 from accounts.form import *
 from django.urls import reverse
+from django.db import transaction
 
 
 def index(request):
@@ -104,13 +104,18 @@ class DeleteView(TemplateView):
     form_class = DeleteForm  
 
     def get(self, request, *args, **kwargs):
-        form = self.form_class()
+        form = self.form_class(instance=request.user)
         return render(request, self.template_name, {'form': form})
 
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST, instance=request.user)
+
         if form.is_valid() and form.cleaned_data['confirm_deletion']:
             user = request.user
+            
+            if user.address:
+                user.address.delete()
+                
             user.delete()
-            return redirect('index')  
+            return redirect('/')  
         return render(request, self.template_name, {'form': form})    

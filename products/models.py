@@ -41,27 +41,15 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.TextField()
-    slug = models.SlugField(max_length=100, unique=True)
     price = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
     image = models.ImageField(upload_to="product_images/", blank=True, null=True)
-    product_info = models.OneToOneField(
+    product_details = models.OneToOneField(
         "ProductDetails",
         on_delete=models.CASCADE,
         related_name="product_details",
         null=False,
         blank=False,
     )
-
-    def save(self, commit=True):
-        product = self.product_form.save(commit=False)
-        product_details = self.product_details_form.save(commit=False)
-
-        if commit:
-            product.save()
-            product_details.product = product
-            product_details.save()
-
-        return product
 
     # def average_rating(self):
     #     return self.product_info.reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
@@ -141,19 +129,19 @@ class Sales(models.Model):
     )
 
 
-@receiver(pre_save, sender=ProductDetails)
-def validate_product_details(sender, instance, **kwargs):
-    # Проверка срока годности
-    if instance.prod_date > instance.arrived_date:
-        raise ValidationError(
-            "Дата производства не может быть раньше, чем дата привоза."
-        )
+# @receiver(pre_save, sender=ProductDetails)
+# def validate_product_details(sender, instance, **kwargs):
+#     # Проверка срока годности
+#     if instance.prod_date > instance.arrived_date:
+#         raise ValidationError(
+#             "Дата производства не может быть раньше, чем дата привоза."
+#         )
 
 
 @receiver(pre_save, sender=Product)
 def validate_product(sender, instance, **kwargs):
     # Проверка цены
-    if instance.price < 0 or instance.price > 99999:
+    if instance.price is not None and (instance.price < 0 or instance.price > 99999):
         raise ValidationError("Цена должна быть в диапазоне от 0 до 99999.")
 
 

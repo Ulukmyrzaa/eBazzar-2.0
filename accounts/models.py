@@ -2,18 +2,25 @@ from datetime import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
-from django.dispatch import receiver
+from django.core.validators import MinValueValidator
+
 
 class Role(models.Model):
     name = models.CharField(max_length=90, blank=True, null=True)
     user_profile = models.ForeignKey('accounts.User', on_delete=models.PROTECT)
     group = models.ManyToManyField(Group, related_name="roles_group", blank=True)
     
+
+class Address(models.Model):
+    appartmentAddress = models.IntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
+    street_address = models.CharField(max_length=90, blank=True, null=True)
+    updateTime = models.DateTimeField(auto_now=True)
+    
     
 class User(AbstractUser):   
     name = models.CharField(max_length=90, blank=True, null=True)
     surname =  models.CharField(max_length=90, blank=True, null=True)
-    address = models.CharField(max_length=90, blank=True, null=True)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True)
     photo = models.ImageField(upload_to="user_photos/", blank=True, null=True)
     role_user = models.ForeignKey(Role, on_delete=models.PROTECT, null=True, blank=True)
@@ -51,3 +58,4 @@ class UserDetails(models.Model):
         return f"{self.first_name} {self.last_name}"
     
     
+

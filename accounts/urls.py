@@ -1,5 +1,4 @@
 from django.urls import path
-from flask_login import login_user
 from accounts.views import *
 
 urlpatterns = [

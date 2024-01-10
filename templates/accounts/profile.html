@@ -13,7 +13,7 @@
         <form method="post" action="{% url 'profile' %}" enctype="multipart/form-data">
             {% csrf_token %}
          {{ form.as_p }}
-            <button type="submit">Save changes</button>
+         {{ form.address_form.as_p }}
         </form>
     {% else %}
     <p>Please log in to view and edit your profile.</p>

@@ -2,5 +2,6 @@
   <form method="post" action="{% url 'edit_profile' %}">
     {% csrf_token %}
     {{ form.as_p }}
+    {{ form.address_form.as_p }}
     <button type="submit">Save changes</button>
   </form>

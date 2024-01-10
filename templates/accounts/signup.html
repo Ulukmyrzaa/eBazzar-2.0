@@ -25,9 +25,10 @@
 					<strong> {{form.errors}} </strong>
 				</div>
 				{% endif%}	
-				<form method="post" action="{% url 'signup' %}">
+				<form method="post" action="{% url 'signup' %}" enctype="multipart/form-data">
 					{% csrf_token %}	
 					{{ form.as_p }}
+					{{ form.address.as_p }}
 					{% comment %}
 					<input class="text" type="text" name="Username" placeholder="Username" required="">
 					<input class="text email" type="email" name="email" placeholder="Email" required="">

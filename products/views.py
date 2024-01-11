@@ -1,21 +1,27 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, UpdateView, DeleteView
 from products.models import *
 from .utils import *
 from .form import *
 
 
-class CreateProductView(CreateView):
+class CreateProductView(UpdateView):
     model = Product
     form_class = CombinedProductForm
     template_name = 'products/create_product.html'
-    success_url = '/product-list/'
+    success_url = reverse_lazy('product-list')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['combined_form'] = self.get_form()
-        return context
-    
+    def form_valid(self, form):
+        product_details_form = ProductDetailsForm(self.request.POST)
+        if product_details_form.is_valid():
+            product_details = product_details_form.save(commit=False)
+            product_details.save()
+            form.instance.product_details = product_details
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
+
 
 class ProductListView(ListView):
     model = Product
@@ -24,7 +30,7 @@ class ProductListView(ListView):
 
 class UpdateProductView(UpdateView):
     model = Product
-    form_class = CombinedProductForm
+    form_class = ProductForm
     template_name = 'update_product.html'
     context_object_name = 'product'
     success_url = '/product-list/'

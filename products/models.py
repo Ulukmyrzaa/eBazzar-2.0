@@ -138,11 +138,11 @@ class Sales(models.Model):
 #         )
 
 
-@receiver(pre_save, sender=Product)
-def validate_product(sender, instance, **kwargs):
-    # Проверка цены
-    if instance.price is not None and (instance.price < 0 or instance.price > 99999):
-        raise ValidationError("Цена должна быть в диапазоне от 0 до 99999.")
+# @receiver(pre_save, sender=Product)
+# def validate_product(sender, instance, **kwargs):
+#     # Проверка цены
+#     if instance.price is not None and (instance.price < 0 or instance.price > 99999):
+#         raise ValidationError("Цена должна быть в диапазоне от 0 до 99999.")
 
 
 @receiver(pre_save, sender=Sales)

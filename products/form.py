@@ -1,75 +1,54 @@
 from django import forms
 from .models import *
-
-
-class ProductForm(forms.ModelForm):
-    class Meta:
-        model = Product
-        fields = ["name", "price"]
+from django import forms
+from django.db import transaction
+from .models import Product, ProductDetails
 
 
 class ProductDetailsForm(forms.ModelForm):
     class Meta:
         model = ProductDetails
-        fields = ["slug", "description", "prod_date", "exp_date", "product_category"]
+        fields = ["description", "prod_date", "exp_date", "product_category"]
 
 
-ProductDetailsFormSet = forms.inlineformset_factory(
-    Product, ProductDetails, form=ProductDetailsForm, extra=1
-)
-
-
-class CombinedProductForm(forms.ModelForm):
-    name = forms.CharField(required=True)
-    price = forms.DecimalField(required=True)
-
-    slug = forms.CharField(required=True)
-    description = forms.CharField(required=True)
-    prod_date = forms.DateField(required=True)
-    exp_date = forms.DateField(required=True)
-    product_category = forms.CharField(required=True)
+class ProductForm(forms.ModelForm):
 
     class Meta:
         model = Product
-        fields = []
+        fields = ['name', 'price']
+
+
+
+class CombinedProductForm(forms.ModelForm):
+    product_form = ProductForm(prefix="product")
+    product_details_form = ProductDetailsForm(prefix="details")
+
+    class Meta:
+        model = Product
+        fields = ['name', 'price']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields.update(ProductForm().fields)
-        self.fields.update(ProductDetailsForm().fields)
-        self.product_details_formset = ProductDetailsFormSet(
-            *args, instance=self.instance, prefix="product_details"
-        )
+        self.fields.update(self.product_details_form.fields)
 
-    def is_valid(self):
-        return super().is_valid() and self.product_details_formset.is_valid()
 
     def save(self, commit=True):
-        product = super().save(commit=commit)
-
+        product = super().save(commit=False)
+        product_details = ProductDetails(
+            slug=self.cleaned_data['name'],  # Используем имя продукта в качестве slug
+            description=self.cleaned_data['description'],
+            prod_date=self.cleaned_data['prod_date'],
+            exp_date=self.cleaned_data['exp_date'],
+            product=product,
+            product_category=self.cleaned_data['product_category']
+        )
         if commit:
-            self.product_details_formset.instance = product
-            self.product_details_formset.save()
-
+            with transaction.atomic():
+                product.save()
+                product_details.product = product
+                product_details.save()
         return product
-
-    # class Meta:
-    #     model = ProductDetails
-    #     fields = [
-    #         "name",
-    #         "price",
-    #         "photo",
-    #         "description",
-    #         "prod_date",
-    #         "exp_date",
-    #         "views",
-    #         "total_items_sold",
-    #         "product_category",
-    #         "quantity_available",
-    #         "status",
-    #     ]
-
-
+    
 class SellerProductDetailsForm(forms.ModelForm):
     class Meta:
         model = SellerProductDetails

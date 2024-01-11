@@ -1,6 +1,7 @@
 from django import forms
 from accounts.models import *
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm
+from products.models import Product
 
 
 class AddressForm(forms.ModelForm):
@@ -124,3 +125,10 @@ class DeleteForm(forms.ModelForm):
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         help_text='Подтвердите удаление пользователя'
     )
+    
+ 
+class WishListItemForm(forms.ModelForm):
+    product = forms.ModelChoiceField(queryset=Product.objects.all(), label='Product', required=True)    
+    class Meta:
+        model = WishListItem
+        fields = ['quantity', 'total_price', 'product']                  

@@ -6,7 +6,7 @@ from .utils import *
 from .form import *
 
 
-class CreateProductView(UpdateView):
+class CreateProductView(CreateView):
     model = Product
     form_class = CombinedProductForm
     template_name = 'products/create_product.html'
@@ -14,14 +14,16 @@ class CreateProductView(UpdateView):
 
     def form_valid(self, form):
         product_details_form = ProductDetailsForm(self.request.POST)
-        if product_details_form.is_valid():
+        product_form = ProductForm(self.request.POST)
+        if product_form.is_valid() and product_details_form.is_valid():
+            product = form.save(commit=False)
             product_details = product_details_form.save(commit=False)
+            product_details.slug = product.name
             product_details.save()
             form.instance.product_details = product_details
             return super().form_valid(form)
         else:
             return self.form_invalid(form)
-
 
 class ProductListView(ListView):
     model = Product

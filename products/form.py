@@ -12,11 +12,9 @@ class ProductDetailsForm(forms.ModelForm):
 
 
 class ProductForm(forms.ModelForm):
-
     class Meta:
         model = Product
         fields = ['name', 'price']
-
 
 
 class CombinedProductForm(forms.ModelForm):
@@ -31,23 +29,6 @@ class CombinedProductForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields.update(self.product_details_form.fields)
 
-
-    def save(self, commit=True):
-        product = super().save(commit=False)
-        product_details = ProductDetails(
-            slug=self.cleaned_data['name'],  # Используем имя продукта в качестве slug
-            description=self.cleaned_data['description'],
-            prod_date=self.cleaned_data['prod_date'],
-            exp_date=self.cleaned_data['exp_date'],
-            product=product,
-            product_category=self.cleaned_data['product_category']
-        )
-        if commit:
-            with transaction.atomic():
-                product.save()
-                product_details.product = product
-                product_details.save()
-        return product
     
 class SellerProductDetailsForm(forms.ModelForm):
     class Meta:

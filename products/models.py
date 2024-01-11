@@ -47,8 +47,8 @@ class Product(models.Model):
         "ProductDetails",
         on_delete=models.CASCADE,
         related_name="product_details",
-        null=False,
-        blank=False,
+        null=True,
+        blank=True,
     )
 
     # def average_rating(self):

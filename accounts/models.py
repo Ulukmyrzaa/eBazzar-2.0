@@ -1,8 +1,10 @@
 from datetime import timezone
+from email.policy import default
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 from django.core.validators import MinValueValidator
+from products.models import Product
 
 
 class Role(models.Model):
@@ -58,4 +60,18 @@ class UserDetails(models.Model):
         return f"{self.first_name} {self.last_name}"
     
     
+class WishListItem(models.Model):
+    quantity = models.IntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    added_time = models.DateTimeField(auto_now_add=True)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL)  
+    
+    
+class WishList(models.Model):
+    user = models.OneToOneField(User, on_delete=models.PROTECT)
+    wishList_item = models.ManyToManyField(WishListItem, related_name="wishList_item")    
+    final_price = models.IntegerField(blank=True, null=True)
+    
+    
+  
 

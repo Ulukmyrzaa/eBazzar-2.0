@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
 
+
 STATUS_CHOICES = [
     ("ON_CREATION", "On creation"),
     ("ON_REVIEW", "On review"),
@@ -25,7 +26,7 @@ class Category(models.Model):
 
     @property
     def get_number_of_products(self):
-        return self.product_set.filter(details__status="IN_STOCK").count()
+        return self.category_products.filter(details__status="IN_STOCK").count()
 
     class Meta:
         ordering = ("name",)
@@ -41,14 +42,11 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.TextField()
-    price = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
+    slug = models.SlugField(max_length=255, unique=True)
+    price = models.DecimalField(max_digits=9, decimal_places=2)
     image = models.ImageField(upload_to="product_images/", blank=True, null=True)
-    product_details = models.OneToOneField(
-        "ProductDetails",
-        on_delete=models.CASCADE,
-        related_name="product_details",
-        null=True,
-        blank=True,
+    product_category = models.ForeignKey(
+        "Category", on_delete=models.PROTECT, related_name="category_products"
     )
 
     # def average_rating(self):
@@ -56,11 +54,8 @@ class Product(models.Model):
 
 
 class ProductDetails(models.Model):
-    slug = models.SlugField(max_length=255, unique=True)
     description = models.CharField(max_length=500, blank=True, null=True)
-    prod_date = models.DateField(
-        default=now, null=False, blank=False
-    )
+    prod_date = models.DateField(default=now, null=False, blank=False)
     exp_date = models.DateField(null=False, blank=False)
     total_views = models.PositiveIntegerField(default=0, blank=False, null=False)
     total_items_sold = models.PositiveIntegerField(default=0, blank=True, null=True)
@@ -68,18 +63,15 @@ class ProductDetails(models.Model):
         max_length=20, choices=STATUS_CHOICES, default="On creation"
     )
     product = models.OneToOneField(
-        Product, on_delete=models.CASCADE, null=True, blank=True
+        Product, on_delete=models.CASCADE, null=False, blank=False
     )
-    product_category = models.ForeignKey(
-        "Category", on_delete=models.PROTECT, related_name="category_products"
-    )
+
     # reviews = models.ManyToManyField(Review, related_name="product_reviews")
 
     def get_absolute_url(self):
         return reverse("product_detail", args=[self.slug])
 
     def days_until_expiration(self):
-
         remaining_days = (self.exp_date - now).days
         return remaining_days if remaining_days >= 0 else 0
 
@@ -92,8 +84,9 @@ class ProductDetails(models.Model):
 
 
 class SellerProductDetails(models.Model):
-  #  created_by = models.ForeignKey()
-    update_at = models.DateTimeField(auto_now=True)
+    #created_by = models.ForeignKey(User, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     arrived_date = models.DateField(null=False, blank=False)
     total_available = models.IntegerField(default=0, blank=False, null=False)
     total_unique_views = models.PositiveIntegerField(default=0, blank=False, null=False)
@@ -122,10 +115,11 @@ class SellerProductDetails(models.Model):
 
 
 class Sales(models.Model):
-    sold_time = models.DateTimeField()
-    price_sold = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
-    seller_product_details = models.ForeignKey(
-        SellerProductDetails, on_delete=models.CASCADE, related_name="sales"
+    sale_time = models.DateTimeField()
+    total_items_sold = models.PositiveIntegerField(default=0)
+    total_cost = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="sold_product"
     )
 
 
@@ -138,11 +132,11 @@ class Sales(models.Model):
 #         )
 
 
-# @receiver(pre_save, sender=Product)
-# def validate_product(sender, instance, **kwargs):
-#     # Проверка цены
-#     if instance.price is not None and (instance.price < 0 or instance.price > 99999):
-#         raise ValidationError("Цена должна быть в диапазоне от 0 до 99999.")
+@receiver(pre_save, sender=Product)
+def validate_product(sender, instance, **kwargs):
+    # Проверка цены
+    if instance.price is not None and (instance.price < 0 or instance.price > 99999):
+        raise ValidationError("Цена должна быть в диапазоне от 0 до 99999.")
 
 
 @receiver(pre_save, sender=Sales)
@@ -181,23 +175,3 @@ def validate_sold_price(sender, instance, **kwargs):
 #     employees = models.ManyToManyField(CustomUser, related_name="pavilion_employees")
 #     products = models.ManyToManyField(Product, related_name="pavilion_products")
 #     categories = models.ManyToManyField(Category, related_name="pavilion_categories")
-
-
-# class Wishlist(models.Model):
-#     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, null=False, blank=False)
-#     products = models.ManyToManyField(Product, related_name="wishlist_products")
-#     update_date = models.DateField(null=False, blank=False)
-
-#     STATUS_CHOICES = [
-#         ('WAITING_PAYMENT', 'Waiting Payment'),
-#         ('PROCESSING', 'Processing'),
-#         ('SHIPPED', 'Success'),
-#         ('PAID', 'Paid'),
-#         ('ERROR', 'Error'),
-#         ('CANCELED', 'Canceled'),
-#         ('REFUNDED', 'Refunded'),
-#         ('PARTIALLY_SHIPPED', 'Partially shipped'),
-#         ('ON_HOLD', 'On hold'),
-#         ('SHIPPED', 'Shipped')
-#     ]
-#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='WAITING_PAYMENT')

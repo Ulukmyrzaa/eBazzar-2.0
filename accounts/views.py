@@ -3,7 +3,6 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.views import TemplateView, LogoutView
 from accounts.form import *
 from django.urls import reverse
-from django.db import transaction
 
 
 def index(request):
@@ -83,19 +82,23 @@ class LogoutView(LogoutView):
 class EditView(TemplateView):
     template_name = 'accounts/edit_profile.html'
     form_class = EditForm
+    addres_form_class = AddressForm
 
     def get(self, request, *args, **kwargs):
         form = self.form_class(instance=request.user)
-        context = {'form': form}
+        address_form = self.addres_form_class(instance=request.user.address)
+        context = {'form': form, 'address_form': address_form}
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST, instance=request.user)
-        if form.is_valid():
+        address_form = self.addres_form_class(request.POST, instance=request.user.address)        
+        if form.is_valid() and address_form.is_valid():
             form.save()
+            address_form.save()
             return redirect('profile')  
 
-        context = {'form': form}
+        context = {'form': form, 'address_form': address_form}
         return render(request, self.template_name, context)
     
     
@@ -119,3 +122,29 @@ class DeleteView(TemplateView):
             user.delete()
             return redirect('/')  
         return render(request, self.template_name, {'form': form})    
+    
+    
+class WishListItemView(TemplateView):
+    template_name = 'accounts/wishlist.html'
+    form_class = WishListItemForm
+    
+    def get(self, request, *args, **kwargs):
+            form = self.form_class()
+            return render(request, self.template_name, {'form': form})
+        
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+                
+        if form.is_valid():         
+            product = form.cleaned_data['product']
+                        
+            WishListItem.objects.create(
+            quantity=form.cleaned_data['quantity'],
+            total_price=form.cleaned_data['total_price'],
+            product=product,
+        )
+       
+        return render(request, self.template_name, {'form': form})
+    
+
+   

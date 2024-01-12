@@ -4,46 +4,56 @@ from django.views.generic import CreateView, ListView, UpdateView, DeleteView
 from products.models import *
 from .utils import *
 from .form import *
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView
+from django.db import transaction
 
 
 class CreateProductView(CreateView):
     model = Product
     form_class = CombinedProductForm
-    template_name = 'products/create_product.html'
-    success_url = reverse_lazy('product-list')
+    template_name = "products/create_product.html"
+    success_url = reverse_lazy("product-list")
+
 
     def form_valid(self, form):
-        product_details_form = ProductDetailsForm(self.request.POST)
         product_form = ProductForm(self.request.POST)
+        product_details_form = ProductDetailsForm(self.request.POST)
+
         if product_form.is_valid() and product_details_form.is_valid():
             product = form.save(commit=False)
+            product.slug = product.name
+            product.save()
+
             product_details = product_details_form.save(commit=False)
-            product_details.slug = product.name
+            product_details.product = product
             product_details.save()
-            form.instance.product_details = product_details
+
             return super().form_valid(form)
+
         else:
             return self.form_invalid(form)
 
+
 class ProductListView(ListView):
     model = Product
-    template_name = 'product_list.html'
-    context_object_name = 'products'
+    template_name = "product_list.html"
+    context_object_name = "products"
+
 
 class UpdateProductView(UpdateView):
     model = Product
     form_class = ProductForm
-    template_name = 'update_product.html'
-    context_object_name = 'product'
-    success_url = '/product-list/'
+    template_name = "update_product.html"
+    context_object_name = "product"
+    success_url = "/product-list/"
+
 
 class DeleteProductView(DeleteView):
     model = Product
-    template_name = 'delete_product.html'
-    context_object_name = 'product'
-    success_url = '/product-list/'
-    
-
+    template_name = "delete_product.html"
+    context_object_name = "product"
+    success_url = "/product-list/"
 
 
 # def add_product(request):

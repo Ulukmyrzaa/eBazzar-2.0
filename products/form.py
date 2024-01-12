@@ -8,13 +8,13 @@ from .models import Product, ProductDetails
 class ProductDetailsForm(forms.ModelForm):
     class Meta:
         model = ProductDetails
-        fields = ["description", "prod_date", "exp_date", "product_category"]
+        fields = ["description", "prod_date", "exp_date"]
 
 
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'price']
+        fields = ['name', 'price', "product_category"]
 
 
 class CombinedProductForm(forms.ModelForm):
@@ -23,7 +23,7 @@ class CombinedProductForm(forms.ModelForm):
 
     class Meta:
         model = Product
-        fields = ['name', 'price']
+        fields = ['name', 'price',  "product_category"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

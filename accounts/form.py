@@ -128,7 +128,36 @@ class DeleteForm(forms.ModelForm):
     
  
 class WishListItemForm(forms.ModelForm):
-    product = forms.ModelChoiceField(queryset=Product.objects.all(), label='Product', required=True)    
+    product = forms.ModelChoiceField(queryset=Product.objects.all(), 
+                                     label='Product',  to_field_name='name', required=True)    
     class Meta:
         model = WishListItem
-        fields = ['quantity', 'product']                  
+        fields = ['product']   
+        
+
+# class WishListForm(forms.ModelForm):
+#     wishList_item = forms.ModelMultipleChoiceField(queryset=WishListItem.objects.all(), 
+#                                                    widget=forms.Select, label='Любимые товары',
+#                                                    to_field_name='product')
+class WishListForm(forms.ModelForm):
+    wishList_item = forms.ModelMultipleChoiceField(
+        queryset=WishListItem.objects.values_list('product__name', flat=True),
+        widget=forms.Select,
+        label='Любимые товары')
+    class Meta:
+        model = WishList
+        fields = ['wishList_item']    
+        
+    #     wishlist_item_form = WishListItemForm()
+        
+        
+    # def __init__(self, *args, **kwargs):
+    #     super(WishListForm, self).__init__(*args, **kwargs)    
+        
+    #     if self.instance.wishlist:
+    #         self.wishlist_item_form = WishListItemForm(instance=self.instance.wishlist)
+
+    # def save(self, commit=True):
+    #     user = super(WishListForm, self).save(commit=False)
+        
+                          

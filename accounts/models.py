@@ -49,10 +49,11 @@ class UserDetails(models.Model):
     credit_card = models.IntegerField(blank=True, null=True)  
     total_item_purchased = models.IntegerField(default=0)
     total_spend = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
-    orders_user = models.OneToOneField('carts.Order', on_delete=models.SET_NULL, null=True, blank=True)
-    basket = models.ForeignKey(
-          'carts.Basket', on_delete=models.CASCADE, related_name='user_basket', null=True
-    )
+    # orders_user = models.OneToOneField('carts.Order', on_delete=models.SET_NULL, null=True, blank=True)
+    wishlist = models.OneToOneField("Wishlist", on_delete=models.CASCADE)
+    # basket = models.ForeignKey(
+    #       'carts.Basket', on_delete=models.CASCADE, related_name='user_basket', null=True
+    # )
     user_permissions = models.ManyToManyField(
         Permission, related_name="custom_users", blank=True
     )
@@ -61,15 +62,20 @@ class UserDetails(models.Model):
     
     
 class WishListItem(models.Model):
-    quantity = models.IntegerField(default=1)
     added_time = models.DateTimeField(auto_now_add=True)
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)  
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True) 
+     
+    def __str__(self):
+        return f"{self.product.name} ({self.added_time})"
     
     
 class WishList(models.Model):
-    user = models.OneToOneField(User, on_delete=models.PROTECT)
-    wishList_item = models.ManyToManyField(WishListItem, related_name="wishList_item")    
-    final_price = models.IntegerField(blank=True, null=True)
+    user = models.OneToOneField(UserDetails, on_delete=models.CASCADE, related_name="user_wishlist")
+    wishList_item = models.ManyToManyField(WishListItem, related_name="wishList_items")    
+    
+    # def add_to_wishlist(self, product):
+    #     wish_list_item, created = WishListItem.objects.get_or_create(product=product)
+    #     self.wishList_item.add(wish_list_item)
     
     
   

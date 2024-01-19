@@ -1,0 +1,34 @@
+{% comment %} <!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+    </head>
+    <body>
+        <h2>Список желаний </h2>
+        {% if wishlist %}
+    <p>Your wishlist:</p>
+    <ul>
+      {% for item in wishlist.wishlist_items.all %}
+        <li>{{ item.product.name }}</li>
+        <form method="post" action="{% url 'wish'%}"> <!---->
+            {% csrf_token %}
+            {{form_wishlist.as_p}}
+            {{form_wishlist_item.as_p}}
+            <button type="submit">Обновить список желаний</button>
+        </form>    
+    </body>
+</html> {% endcomment %}
+
+{% block content %}
+  <h2>Список желаний пользователя {{ user.username }}</h2>
+  <form method="post" action="{% url 'wish' %}">
+    {% csrf_token %}
+    {{ form_wishlist.as_p }}
+  </form>
+{% endblock %}

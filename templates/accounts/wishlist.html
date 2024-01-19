@@ -15,11 +15,6 @@
         <form method="post" action="{% url 'wishlist'%}"> <!---->
             {% csrf_token %}
             {{form.as_p}}
-            {% if new_quantity is not None %}
-            <p>Quantity updated: {{ new_quantity }}</p>
-          {% endif %} 
-            <button type="submit" name="increase" value="1">+</button>
-            <button type="submit" name="decrease" value="1">-</button>
             <button type="submit">Добавить в список желаний</button>
         </form>    
     </body>

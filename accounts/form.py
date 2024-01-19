@@ -131,4 +131,4 @@ class WishListItemForm(forms.ModelForm):
     product = forms.ModelChoiceField(queryset=Product.objects.all(), label='Product', required=True)    
     class Meta:
         model = WishListItem
-        fields = ['quantity', 'total_price', 'product']                  
+        fields = ['quantity', 'product']                  

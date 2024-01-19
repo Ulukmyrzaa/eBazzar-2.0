@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.views import TemplateView, LogoutView
 from accounts.form import *
@@ -128,23 +128,44 @@ class WishListItemView(TemplateView):
     template_name = 'accounts/wishlist.html'
     form_class = WishListItemForm
     
-    def get(self, request, *args, **kwargs):
-            form = self.form_class()
-            return render(request, self.template_name, {'form': form})
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk:
+            wishlist_item = get_object_or_404(WishListItem, pk=pk)
+            form = self.form_class(instance=wishlist_item)
+        else:
+            form = self.form_class()    
+        return render(request, self.template_name, {'form': form})
         
-    def post(self, request, *args, **kwargs):
+    def post(self, request, pk=None, *args, **kwargs):
+        if pk:
+            wishlist_item = get_object_or_404(WishListItem, pk=pk)
+            form = self.form_class(request.POST, instance=wishlist_item)
+        else:
+            form = self.form_class(request.POST)
         form = self.form_class(request.POST)
                 
-        if form.is_valid():         
-            product = form.cleaned_data['product']
-                        
-            WishListItem.objects.create(
-            quantity=form.cleaned_data['quantity'],
-            total_price=form.cleaned_data['total_price'],
-            product=product,
-        )
-       
-        return render(request, self.template_name, {'form': form})
+        if form.is_valid(): 
+            existing_item = None    
+            
+            if form.cleaned_data.get('product'):
+                existing_item = WishListItem.objects.filter(
+                    product=form.cleaned_data['product']
+                ).first()    
+            
+            if existing_item:
+                quantity_change = int(request.POST.get('increase', 0)) - int(request.POST.get('decrease', 0))                
+                existing_item.quantity += quantity_change
+                new_quantity = existing_item.quantity                
+                if existing_item.quantity < 1:
+                    existing_item.delete()  
+                else:
+                    existing_item.save()
+            
+            return render(request, self.template_name, {'form': form}, {'new_quantity': new_quantity} )
+              
+                                   
+             
+        return render(request, self.template_name, {'form': form}, )
     
 
    

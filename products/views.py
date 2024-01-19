@@ -1,6 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, UpdateView, DeleteView
+from django.views.generic import CreateView, ListView, UpdateView, DeleteView, DetailView
 from products.models import *
 from .utils import *
 from .form import *
@@ -9,30 +10,29 @@ from django.views.generic.edit import CreateView
 from django.db import transaction
 
 
+
+class ProductDetailsView(DetailView):
+    model = ProductDetails
+    template_name = 'products/product_details.html'
+    context_object_name = 'product_details'
+    slug_field = 'product__slug'
+    slug_url_kwarg = 'slug'
+
 class CreateProductView(CreateView):
     model = Product
     form_class = CombinedProductForm
     template_name = "products/create_product.html"
-    success_url = reverse_lazy("product-list")
+    success_url = None
 
-
+    @transaction.atomic
     def form_valid(self, form):
-        product_form = ProductForm(self.request.POST)
-        product_details_form = ProductDetailsForm(self.request.POST)
+        self.object = form.save(commit=True)
+        
+        product_details = ProductDetailsForm(self.request.POST).save(commit=False)
+        product_details.product = self.object
+        product_details.save()
 
-        if product_form.is_valid() and product_details_form.is_valid():
-            product = form.save(commit=False)
-            product.slug = product.name
-            product.save()
-
-            product_details = product_details_form.save(commit=False)
-            product_details.product = product
-            product_details.save()
-
-            return super().form_valid(form)
-
-        else:
-            return self.form_invalid(form)
+        return super().form_valid(form)
 
 
 class ProductListView(ListView):

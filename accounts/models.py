@@ -50,7 +50,7 @@ class UserDetails(models.Model):
     total_item_purchased = models.IntegerField(default=0)
     total_spend = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     # orders_user = models.OneToOneField('carts.Order', on_delete=models.SET_NULL, null=True, blank=True)
-    wishlist = models.OneToOneField("Wishlist", on_delete=models.CASCADE)
+    # wishlist = models.OneToOneField("Wishlist", on_delete=models.CASCADE)
     # basket = models.ForeignKey(
     #       'carts.Basket', on_delete=models.CASCADE, related_name='user_basket', null=True
     # )
@@ -58,7 +58,7 @@ class UserDetails(models.Model):
         Permission, related_name="custom_users", blank=True
     )
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.user}"
     
     
 class WishListItem(models.Model):

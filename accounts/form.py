@@ -148,16 +148,5 @@ class WishListForm(forms.ModelForm):
         model = WishList
         fields = ['wishList_item']    
         
-    #     wishlist_item_form = WishListItemForm()
-        
-        
-    # def __init__(self, *args, **kwargs):
-    #     super(WishListForm, self).__init__(*args, **kwargs)    
-        
-    #     if self.instance.wishlist:
-    #         self.wishlist_item_form = WishListItemForm(instance=self.instance.wishlist)
-
-    # def save(self, commit=True):
-    #     user = super(WishListForm, self).save(commit=False)
         
                           

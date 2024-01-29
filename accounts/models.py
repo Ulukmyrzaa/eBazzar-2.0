@@ -73,10 +73,6 @@ class WishList(models.Model):
     user = models.OneToOneField(UserDetails, on_delete=models.CASCADE, related_name="user_wishlist")
     wishList_item = models.ManyToManyField(WishListItem, related_name="wishList_items")    
     
-    # def add_to_wishlist(self, product):
-    #     wish_list_item, created = WishListItem.objects.get_or_create(product=product)
-    #     self.wishList_item.add(wish_list_item)
-    
     
   
 

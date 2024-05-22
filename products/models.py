@@ -31,21 +31,19 @@ class Category(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100, unique=True)
     category_image = models.ImageField(upload_to="category_images/")
-
-    @property
-    def get_number_of_products(self):
-        return self.category_products.filter(details__status="IN_STOCK").count()
-
-    class Meta:
-        ordering = ("name",)
-        verbose_name = "category"
-        verbose_name_plural = "categories"
-
-    def __str__(self):
-        return self.name
+    parent_category = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        related_name='subcategories',
+        blank=True,
+        null=True
+    )
 
     def get_absolute_url(self):
         return reverse("category", args=[self.slug])
+
+    def __str__(self):
+        return self.name
 
 
 class Product(models.Model):
@@ -92,8 +90,7 @@ class ProductDetails(models.Model):
 class SellerProductInfo(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    total_views = models.PositiveIntegerField(default=0, blank=False, null=False)
-    total_money_earned = models.FloatField(default=0, blank=False, null=False)
+    total_money_earned = models.DecimalField(default=0, decimal_places=2, max_digits=9, blank=False, null=False)
     product_details = models.OneToOneField(
         ProductDetails, on_delete=models.CASCADE, null=False, blank=False
     )
@@ -110,7 +107,7 @@ class SellerProductInfo(models.Model):
 class Sales(models.Model):
     sale_time = models.DateTimeField()
     total_items_sold = models.PositiveIntegerField(default=0)
-    total_cost = models.PositiveIntegerField(validators=[MaxValueValidator(99999)])
+    total_cost = models.DecimalField(max_digits=9, decimal_places=2)
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="sold_product"
     )

@@ -18,13 +18,13 @@ from django.db import transaction
         
     #юзер создался создается юзер детейлс создается вишлист в отдельной функции надо чтобы все было пресейв попробуй если не будет получаться то пробуй как хочешь и делай что хочешь
     
-@receiver(post_save, sender=User)
-def create_userDetails_and_wishlist(sender, instance, created, **kwargs):
-    if created:
-        print('aloha')
-        with transaction.atomic():    
-            user_details = UserDetails.objects.create(user=instance)
-            wishlist, wishlist_created = WishList.objects.create(user=user_details)
-            user_details.wishlist = wishlist
-            user_details.save()    
-        print('end')
+# @receiver(post_save, sender=User)
+# def create_userDetails_and_wishlist(sender, instance, created, **kwargs):
+#     if created:
+#         print('aloha')
+#         with transaction.atomic():    
+#             user_details = UserDetails.objects.create(user=instance)
+#             wishlist, wishlist_created = WishList.objects.create(user=user_details)
+#             user_details.wishlist = wishlist
+#             user_details.save()    
+#         print('end')

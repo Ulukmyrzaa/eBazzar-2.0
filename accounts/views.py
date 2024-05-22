@@ -128,34 +128,6 @@ class DeleteView(TemplateView):
             return redirect('/')  
         return render(request, self.template_name, {'form': form})    
     
-       
-    
-    
-# class WishListView(LoginRequiredMixin, CreateView):
-#     model = WishList
-#     form_class = WishListForm
-#     template_name = 'accounts/wish.html'
-#     success_url = '/wishlist/'  # Перенаправление после успешного сохранения
-
-#     def get_object(self, queryset=None):
-#         # Получаем объект WishList текущего пользователя
-#         return WishList.objects.get_or_create(user=self.request.user)[0]
-
-#     def get_form(self, form_class=None):
-#         # Передаем текущего пользователя в форму
-#         form = super().get_form(form_class)
-#         form.user = self.request.user
-#         return form
-
-#     def form_valid(self, form):
-#         print('Form is valid')
-#         self.object = form.save(commit=False)
-#         self.object.user = self.request.user
-#         self.object.save()
-#         print(f'WishList saved for user: {self.object.user.username}')        
-#         return super().form_valid(form) 
-    
-    
 
 class WishListItemView(TemplateView):
     template_name = 'accounts/wishlist.html'
@@ -187,6 +159,7 @@ class WishListItemView(TemplateView):
             return redirect('wish')
                                                          
         return render(request, self.template_name, {'user':user, 'form': form} ) 
+
         
 @method_decorator(login_required, name='dispatch')
 class WishListView(TemplateView):
@@ -194,7 +167,11 @@ class WishListView(TemplateView):
     
     def get(self, request, *args, **kwargs):        
         user = request.user
-        wishlist = WishList.objects.filter(user=user).first()
+        # user_instance , created = User.objects.get_or_create(username=user)
+        user_details, created = UserDetails.objects.get_or_create(user=user)
+        # wishlist = user_details.wishlist
+        wishlist = WishList.objects.filter(user=user_details).first()
+        
 
         if not wishlist:
             # Если у пользователя нет списка желаний, создаем новый
@@ -208,7 +185,8 @@ class WishListView(TemplateView):
     
     def post(self, request, *args, **kwargs):
         user = request.user
-        wishlist = WishList.objects.filter(user=user).first()
+        user_details = UserDetails.objects.get_or_create(user=user)
+        wishlist = WishList.objects.filter(user=user_details).first()
         
         if not wishlist:
             # Если у пользователя нет списка желаний, создаем новый
@@ -233,69 +211,4 @@ class WishListView(TemplateView):
         context = {'user': user, 'wishlist': wishlist, 'form_wishlist': form_wishlist, 'form_wishlist_item': form_wishlist_item}
         return render(request, self.template_name, context)
 
-
-# @method_decorator(login_required, name='dispatch')
-# class WishListView(TemplateView):
-#     template_name = 'accounts/wish.html'
-    
-#     def get(self, request, *args, **kwargs):        
-#         user = request.user
-#         wishlist, created = WishList.objects.get_or_create(user=user)
-            
-#         form_wishlist = WishListForm(instance=wishlist)
-#         form_wishlist_item = WishListItemForm()
-            
-#         context = {'user': user, 'wishlist': wishlist, 'form_wishlist': form_wishlist, 'form_wishlist_item': form_wishlist_item}
-#         return render(request, self.template_name, context)
-
-#     def post(self, request, *args, **kwargs):
-#         user = request.user
-#         wishlist, created = WishList.objects.get_or_create(user=user)
-
-#         form_wishlist = WishListForm(request.POST, instance=wishlist)
-#         form_wishlist_item = WishListItemForm(request.POST)
-
-#         if form_wishlist.is_valid() and form_wishlist_item.is_valid():
-#             # Сохраняем форму списка желаний
-#             wishlist = form_wishlist.save()
-
-#             # Сохраняем форму товара в списке желаний
-#             wishlist_item = form_wishlist_item.save(commit=False)
-#             wishlist_item.save()
-
-#             # Добавляем товар в список желаний пользователя
-#             wishlist.wishList_item.add(wishlist_item)
-
-#             return redirect('wish')
-
-#         context = {'user': user, 'wishlist': wishlist, 'form_wishlist': form_wishlist, 'form_wishlist_item': form_wishlist_item}
-#         return render(request, self.template_name, context)
-  
-# class WishListView(TemplateView):
-#     template_name = 'accounts/wish.html'
-
-#     def get(self, request, *args, **kwargs):
-#         user = request.user
-#         try:
-#             # Получение объекта WishList для пользователя
-#             wishlist = WishList.objects.get(user=user)
-#         except WishList.DoesNotExist:
-#             # Если объекта WishList нет, создаем его
-#             wishlist = WishList.objects.create(user=user)
-#         form = WishListForm(instance=user)
-#         context = {'form': form}
-#         return render(request, self.template_name, context)
-
-#     def post(self, request, *args, **kwargs):
-#         user = request.user
-#         try:
-#             # Получение объекта WishList для пользователя
-#             wishlist = WishList.objects.get(user=user)
-#         except WishList.DoesNotExist:
-#             # Если объекта WishList нет, создаем его
-#             wishlist = WishList.objects.create(user=user)
-#         form = WishListForm(request.POST, instance=wishlist)
-#         if form.is_valid():
-#             form.save()
-#         context = {'form': form}
-#         return render(request, self.template_name, context)            
+         

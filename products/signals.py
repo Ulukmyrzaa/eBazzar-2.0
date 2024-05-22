@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from django.forms import ValidationError
 from django.db.models.signals import pre_save, post_save
 from products.models import *
-
+import random
 
 @receiver(pre_save, sender=Product)
 def validate_product(sender, instance, **kwargs):
@@ -21,9 +21,10 @@ def validate_product_details(sender, instance, **kwargs):
         )
 
 
-@receiver(pre_save, sender=Product)
-def product_creation(sender, instance, **kwargs):
-    instance.slug = slugify(instance.name)
+@receiver(post_save, sender=Product)
+def product_creation(sender, instance, created, **kwargs):
+    instance.slug = 00000000 + int(instance.id)
+    
 
 
 @receiver(post_save, sender=ProductDetails)

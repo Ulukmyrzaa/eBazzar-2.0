@@ -13,12 +13,12 @@ def create_order(request):
     if request.method == 'POST':
         form = OrderForm(request.POST, user_profile=user_profile)
         if form.is_valid():
-            name = form.cleaned_data['name']
+            first_name = form.cleaned_data['first_name']
             phone_number = form.cleaned_data['phone_number']
             address = form.cleaned_data['address']
 
-            if name != user_profile.name:
-                user_profile.name = name
+            if first_name != user_profile.first_name:
+                user_profile.first_name = first_name
                 user_profile.save()
             if phone_number != user_profile.phone_number:
                 user_profile.phone_number = phone_number
@@ -27,7 +27,7 @@ def create_order(request):
                 user_profile.address = address
                 user_profile.save()
 
-            order = Order.objects.create(user_profile=user_profile, name=name, phone_number=phone_number,
+            order = Order.objects.create(user_profile=user_profile, first_name=first_name, phone_number=phone_number,
                                          address=address)
             # Другая обработка заказа
             return redirect('order_confirmation')

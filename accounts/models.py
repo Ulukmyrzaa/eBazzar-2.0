@@ -8,9 +8,7 @@ from products.models import Product
 
 
 class Address(models.Model):
-    apartment_number = models.IntegerField(
-        blank=True, null=True, validators=[MinValueValidator(0)]
-    )
+    apartment_number = models.CharField(max_length=10, blank=True, null=True)
     street_address = models.CharField(max_length=90, blank=True, null=True)
     update_at = models.DateTimeField(auto_now=True)
 

@@ -46,6 +46,7 @@ def truncate_tables():
     cursor = connection.cursor()
     tables = [
         "accounts_user",
+        "accounts_address",
         "accounts_userdetails",
         "products_product",
         "products_productdetails",
@@ -61,7 +62,7 @@ def truncate_tables():
 def create_addresses(num_addresses):
     addresses = []
     for _ in range(num_addresses):
-        apartment_number = random.randint(1, 1000)
+        apartment_number = fake.building_number()
         street_address = fake.street_address()
         address = Address.objects.create(
             apartment_number=apartment_number,
@@ -129,7 +130,7 @@ def create_users(num_users, addresses):
 def create_categories(num_categories, num_subcategories, num_sub_subcategories):
     # Создание родительских категорий
     parent_categories = []
-    num_categories = randint(1, num_categories)
+    num_categories = randint(4, num_categories)
     for _ in range(num_categories):
         name = fake.word()
         slug = slugify(name + str(fake.random_int(1, 10000)) + "G")
@@ -143,7 +144,7 @@ def create_categories(num_categories, num_subcategories, num_sub_subcategories):
 
     # Создание подкатегорий
     subcategories = []
-    num_subcategories = randint(1, num_subcategories)
+    num_subcategories = randint(3, num_subcategories)
     for parent_category in parent_categories:
         for _ in range(num_subcategories):
             name = fake.word()
@@ -160,7 +161,7 @@ def create_categories(num_categories, num_subcategories, num_sub_subcategories):
 
     # Создание под-подкатегорий
     sub_subcategories = []
-    num_sub_subcategories = randint(1, num_sub_subcategories)
+    num_sub_subcategories = randint(2, num_sub_subcategories)
     for subcategory in subcategories:
         for _ in range(num_sub_subcategories):
             name = fake.word()

@@ -1,22 +1,27 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, UpdateView, DeleteView, DetailView
+from django.views.generic import (
+    CreateView,
+    ListView,
+    UpdateView,
+    DeleteView,
+    DetailView,
+)
 from products.models import *
 from .utils import *
 from .form import *
-from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
 from django.db import transaction
-
+from django.db.models import Q
 
 
 class ProductDetailsView(DetailView):
     model = ProductDetails
-    template_name = 'products/product_details.html'
-    context_object_name = 'product_details'
-    slug_field = 'product__slug'
-    slug_url_kwarg = 'slug'
+    template_name = "products/product_details.html"
+    context_object_name = "product_details"
+    slug_field = "product__slug"
+    slug_url_kwarg = "slug"
+
 
 class CreateProductView(CreateView):
     model = Product
@@ -27,7 +32,7 @@ class CreateProductView(CreateView):
     @transaction.atomic
     def form_valid(self, form):
         self.object = form.save(commit=True)
-        
+
         product_details = ProductDetailsForm(self.request.POST).save(commit=False)
         product_details.product = self.object
         product_details.save()
@@ -37,8 +42,29 @@ class CreateProductView(CreateView):
 
 class ProductListView(ListView):
     model = Product
-    template_name = "product_list.html"
+    template_name = "products/products_list.html"
     context_object_name = "products"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = ProductForm()
+        context["categories"] = Category.objects.all()
+        return context
+
+    def get_queryset(self):
+        category_slug = self.kwargs.get("category_slug")
+        if category_slug:
+            # Получаем категорию по slug
+            category = Category.objects.get(slug=category_slug)
+
+            # Собираем список всех дочерних категорий
+            subcategories = category.get_descendants(include_self=True)
+
+            # Фильтруем продукты по категории и ее подкатегориям
+            return Product.objects.filter(
+                Q(product_category=category) | Q(product_category__in=subcategories)
+            )
+        return Product.objects.all()
 
 
 class UpdateProductView(UpdateView):
@@ -80,28 +106,10 @@ class DeleteProductView(DeleteView):
 #         return render(request, 'add_product.html')
 
 
-# def all_products(request):
-#     products = Product.objects.all()
-#     return render(request, 'all_products.html', {'products': products})
-
-
 # def product_detail(request, product_id):
 #     try:
 #         product = Product.objects.get(id=product_id)
 #         return render(request, 'product_detail.html', {'product': product})
 #     except Product.DoesNotExist:
 #         error_message = 'Такого товара не существует.'
-#         return render(request, 'error.html', {'error_message': error_message})
-
-
-# def get_products_by_category(request, category_id):
-#     try:
-#         category = Category.objects.get(id=category_id)
-#         products = Product.objects.filter(product_category=category)
-#         return render(request, 'products_by_category.html', {'products': products})
-#     except Category.DoesNotExist:
-#         error_message = 'Категория не существует.'
-#         return render(request, 'error.html', {'error_message': error_message})
-#     except Product.DoesNotExist:
-#         error_message = 'Товаров в данной категории не существует.'
 #         return render(request, 'error.html', {'error_message': error_message})

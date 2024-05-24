@@ -5,11 +5,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
 from datetime import datetime
-
-from django.utils.text import slugify
-from django.dispatch import receiver
-from django.forms import ValidationError
-from django.db.models.signals import pre_save, post_save
+from mptt.models import MPTTModel
 from products.models import *
 
 
@@ -27,17 +23,30 @@ MEASUREMENT_UNIT = [
 ]
 
 
-class Category(models.Model):
+class Category(MPTTModel):
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100, unique=True)
     category_image = models.ImageField(upload_to="category_images/")
-    parent_category = models.ForeignKey(
+    level = models.IntegerField(default=0, editable=False)
+    parent = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
         related_name='subcategories',
         blank=True,
         null=True
     )
+
+    @property
+    def get_number_of_products(self):
+        return self.category_products.filter(details__status="IN_STOCK").count()
+
+    class MPTTMeta:
+        order_insertion_by = ['name']
+    
+    class Meta:
+        ordering = ("name",)
+        verbose_name = "category"
+        verbose_name_plural = "categories"
 
     def get_absolute_url(self):
         return reverse("category", args=[self.slug])

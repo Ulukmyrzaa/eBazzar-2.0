@@ -82,7 +82,7 @@ def create_users(num_users, addresses):
         username = email.split("@")[0]
         password = fake.password()
         last_login = timezone.make_aware(fake.date_time_this_year())
-        update_at =  timezone.make_aware(fake.date_time_this_year())
+        update_at = timezone.make_aware(fake.date_time_this_year())
         is_active = fake.boolean()
         photo = fake.image_url(width=200, height=200)
         address = random.choice(addresses)
@@ -96,7 +96,7 @@ def create_users(num_users, addresses):
             first_name=first_name,
             last_name=last_name,
             last_login=last_login,
-            update_at = update_at,
+            update_at=update_at,
             is_active=is_active,
             photo=photo,
             address=address,
@@ -138,14 +138,14 @@ def create_categories(num_categories, num_subcategories, num_sub_subcategories):
             slug = slugify(name + str(fake.random_int(1, 10000)))
         category_image = fake.image_url(width=200, height=200)
         category, _ = Category.objects.get_or_create(
-            name=name, defaults={"slug": slug, "category_image": category_image}
+            name=name, defaults={"slug": slug, "category_image": category_image,  "parent": None}
         )
         parent_categories.append(category)
 
     # Создание подкатегорий
     subcategories = []
     num_subcategories = randint(3, num_subcategories)
-    for parent_category in parent_categories:
+    for parent in parent_categories:
         for _ in range(num_subcategories):
             name = fake.word()
             slug = slugify(name + str(fake.random_int(1, 10000)) + "S1")
@@ -153,10 +153,13 @@ def create_categories(num_categories, num_subcategories, num_sub_subcategories):
                 slug = slugify(name + str(fake.random_int(1, 10000)) + "S1")
             category_image = fake.image_url(width=200, height=200)
             subcategory, _ = Category.objects.get_or_create(
-                name=name, defaults={"slug": slug, "category_image": category_image}
+                name=name,
+                defaults={
+                    "slug": slug,
+                    "category_image": category_image,
+                    "parent": parent, 
+                },
             )
-            subcategory.parent_category = parent_category
-            subcategory.save()
             subcategories.append(subcategory)
 
     # Создание под-подкатегорий
@@ -170,10 +173,13 @@ def create_categories(num_categories, num_subcategories, num_sub_subcategories):
                 slug = slugify(name + str(fake.random_int(1, 10000)) + "S2")
             category_image = fake.image_url(width=200, height=200)
             sub_subcategory, _ = Category.objects.get_or_create(
-                name=name, defaults={"slug": slug, "category_image": category_image}
+                name=name,
+                defaults={
+                    "slug": slug,
+                    "category_image": category_image,
+                    "parent": subcategory,  # Изменено: parent -> parent
+                },
             )
-            sub_subcategory.parent_category = subcategory
-            sub_subcategory.save()
             sub_subcategories.append(sub_subcategory)
     return sub_subcategories
 

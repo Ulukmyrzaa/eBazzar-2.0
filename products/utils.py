@@ -1,28 +1,26 @@
+from django.conf import settings
+from django.urls import reverse
+from products.models import Product, Category
 
-from products.models import *
+def get_product_urls():
+    """
+    Возвращает список полных URL-адресов для всех продуктов в базе данных.
+    """
+    product_urls = []
+    for product in Product.objects.all():
+        category = product.product_category
+        all_categories = get_all_categories(category)
+        category_slug = '/'.join(all_categories)
+        url = reverse('product_detail', kwargs={'category_slug': category_slug, 'product_slug': product.slug})
+        url = f"{settings.SITE_URL}/product/{url}"
+        product_urls.append(url)
+    return product_urls
 
-def create_product(name, total_price, quantity, category_id, product_info_data):
-    category = Category.objects.get(id=category_id)
-
-    
-    product = Product.objects.create(
-        name=name,
-        total_price=total_price,
-        quantity=quantity,
-        product_category=category
-    )
-
-
-    product_info = ProductInfo.objects.create(
-        product=product,
-        price=product_info_data['price'],
-        arrived_date=product_info_data['arrived_date'],
-        prod_date=product_info_data['prod_date'],
-        exp_date=product_info_data['exp_date'],
-        status=product_info_data['status'],
-        rating=product_info_data['rating']
-    )
-
-    product.product_info = product_info
-
-    return product
+def get_all_categories(category):
+    """
+    Рекурсивно собирает все категории, начиная с данной.
+    """
+    categories = [category.slug]
+    if category.parent:  # Используем parent вместо parent_category
+        categories.extend(get_all_categories(category.parent))
+    return categories

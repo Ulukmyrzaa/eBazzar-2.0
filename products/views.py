@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse_lazy
 from django.views.generic import (
     CreateView,
     ListView,
@@ -19,15 +20,21 @@ class ProductDetailsView(DetailView):
     model = ProductDetails
     template_name = "products/product_details.html"
     context_object_name = "product_details"
-    slug_field = "product__slug"
     slug_url_kwarg = "slug"
+
+    def get_queryset(self):
+        category_slug = self.kwargs.get('category_slug')
+        product_slug = self.kwargs.get('product_slug')
+        categories = category_slug.split('/')
+        product = get_object_or_404(Product, slug=product_slug, product_category__slug__in=categories)
+        return ProductDetails.objects.filter(product=product)
 
 
 class CreateProductView(CreateView):
     model = Product
     form_class = CombinedProductForm
     template_name = "products/create_product.html"
-    success_url = None
+    success_url = "/product/"
 
     @transaction.atomic
     def form_valid(self, form):
@@ -45,26 +52,21 @@ class ProductListView(ListView):
     template_name = "products/products_list.html"
     context_object_name = "products"
 
+    def get_queryset(self):
+        category_slug = self.kwargs.get('category_slug')
+        if category_slug:
+            categories = category_slug.split('/')
+            return Product.objects.filter(product_category__slug__in=categories)
+        else:
+            return Product.objects.all()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["form"] = ProductForm()
-        context["categories"] = Category.objects.all()
-        return context
-
-    def get_queryset(self):
-        category_slug = self.kwargs.get("category_slug")
+        category_slug = self.kwargs.get('category_slug')
         if category_slug:
-            # Получаем категорию по slug
-            category = Category.objects.get(slug=category_slug)
-
-            # Собираем список всех дочерних категорий
-            subcategories = category.get_descendants(include_self=True)
-
-            # Фильтруем продукты по категории и ее подкатегориям
-            return Product.objects.filter(
-                Q(product_category=category) | Q(product_category__in=subcategories)
-            )
-        return Product.objects.all()
+            categories = category_slug.split('/')
+            context['current_category'] = Category.objects.filter(slug__in=categories).first()
+        return context
 
 
 class UpdateProductView(UpdateView):

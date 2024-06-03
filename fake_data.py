@@ -24,8 +24,9 @@ def create_fake_product_data(
     num_products,
     num_addresses,
     num_categories,
-    num_subcategories,
-    num_sub_subcategories,
+    categories_depth,
+    categories_width,
+    max_num_items,
     num_max_total_sales,
     num_max_total_sold,
 ):
@@ -34,11 +35,12 @@ def create_fake_product_data(
 
     # Создание данных
     sub_subcategories = create_categories(
-        num_categories, num_subcategories, num_sub_subcategories
+        num_categories, categories_depth, categories_width
     )
     create_products(sub_subcategories, num_products)
     addresses = create_addresses(num_addresses)
     create_users(num_users, addresses)
+    create_wishList_items(max_num_items)
     create_products_sales_and_info(num_max_total_sales, num_max_total_sold)
 
 
@@ -104,91 +106,69 @@ def create_users(num_users, addresses):
             gender=gender,
         )
         users.append(user)
-
-        # Создание списка желаний для юзера
-        wishlist = WishList.objects.create(user=user)
-        for _ in range(random.randint(0, 10)):
-            product = random.choice(Product.objects.all())
-            WishListItem.objects.create(
-                product=product,
-                added_time=timezone.make_aware(fake.date_time_this_year()),
-            )
-
+     
         user_details = []
         user_detail = UserDetails.objects.create(
             user=user,
             # credit_card=fake.credit_card_number()[:16],
             total_item_purchased=random.randint(0, 100),
             total_spend=round(uniform(0.0, 9999.99), 2),
-            wishlist=wishlist,
+            
         )
         user_details.append(user_detail)
 
     return users
 
 
-def create_categories(num_categories, num_subcategories, num_sub_subcategories):
-    # Создание родительских категорий
-    parent_categories = []
-    num_categories = randint(4, num_categories)
-    for _ in range(num_categories):
-        name = fake.word()
-        slug = slugify(name + str(fake.random_int(1, 10000)) + "G")
-        while Category.objects.filter(slug=slug).exists():
-            slug = slugify(name + str(fake.random_int(1, 10000)))
-        category_image = fake.image_url(width=200, height=200)
-        category, _ = Category.objects.get_or_create(
-            name=name, defaults={"slug": slug, "category_image": category_image,  "parent": None}
+def create_wishList_items(max_num_items):
+        # Создание списка желаний для юзера
+    for user in User.objects.all():
+        for _ in range(random.randint(0, max_num_items)):
+            product = random.choice(Product.objects.all())
+            WishList.objects.create(
+                user = user,
+                product=product,
+                added_time=timezone.make_aware(fake.date_time_this_year()),
+            )
+
+
+def create_categories(num_categories, categories_depth, categories_width):
+    categories = []
+
+    # Создаем случайное количество главных категорий
+    num_main_categories = random.randint(3, num_categories)  # Случайное число от 3 до num_categories
+    for _ in range(num_main_categories):
+        name = fake.word() + " " + fake.word()
+        slug = slugify(name)
+        category, created = Category.objects.get_or_create(
+            name=name, defaults={"slug": slug, "category_image": fake.image_url(width=200, height=200), "parent": None}
         )
-        parent_categories.append(category)
+        if created:
+            categories.append(category)
 
-    # Создание подкатегорий
-    subcategories = []
-    num_subcategories = randint(3, num_subcategories)
-    for parent in parent_categories:
-        for _ in range(num_subcategories):
-            name = fake.word()
-            slug = slugify(name + str(fake.random_int(1, 10000)) + "S1")
-            while Category.objects.filter(slug=slug).exists():
-                slug = slugify(name + str(fake.random_int(1, 10000)) + "S1")
-            category_image = fake.image_url(width=200, height=200)
-            subcategory, _ = Category.objects.get_or_create(
-                name=name,
-                defaults={
-                    "slug": slug,
-                    "category_image": category_image,
-                    "parent": parent, 
-                },
-            )
-            subcategories.append(subcategory)
+    # Создаем подкатегории всех уровней
+    for _ in range(random.randint(2, categories_depth)):  # Случайная глубина от 2 до categories_depth
+        new_categories = []
+        for category in categories:
+            width = random.randint(1, categories_width) # Случайная ширина для каждой категории от 1 до categories_width
+            for _ in range(width):  
+                name = fake.word() + " " + fake.word()
+                slug = slugify(name)
+                subcategory, created = Category.objects.get_or_create(
+                    name=name, defaults={"slug": slug, "category_image": fake.image_url(width=200, height=200), "parent": category}
+                )
+                if created:
+                    new_categories.append(subcategory)
+        categories = new_categories
 
-    # Создание под-подкатегорий
-    sub_subcategories = []
-    num_sub_subcategories = randint(2, num_sub_subcategories)
-    for subcategory in subcategories:
-        for _ in range(num_sub_subcategories):
-            name = fake.word()
-            slug = slugify(name + str(fake.random_int(1, 10000)) + "S2")
-            while Category.objects.filter(slug=slug).exists():
-                slug = slugify(name + str(fake.random_int(1, 10000)) + "S2")
-            category_image = fake.image_url(width=200, height=200)
-            sub_subcategory, _ = Category.objects.get_or_create(
-                name=name,
-                defaults={
-                    "slug": slug,
-                    "category_image": category_image,
-                    "parent": subcategory,  # Изменено: parent -> parent
-                },
-            )
-            sub_subcategories.append(sub_subcategory)
-    return sub_subcategories
+    return categories
 
 
 def create_products(sub_subcategories, num_products):
     # Создание продуктов для каждой категории
     for sub_subcategory in sub_subcategories:
         for _ in range(num_products):
-            name = fake.word()
+            name = fake.word() + (" " + fake.word() if random.randint(0, 1) else "")
             prod_date = fake.date_this_decade()
             exp_date = fake.date_between_dates(date_start=prod_date, date_end="+2y")
             measurement_unit = choice(["GRAM", "KG", "UNIT"])
@@ -262,9 +242,10 @@ create_fake_product_data(
     num_users=10,
     num_products=5,
     num_addresses=30,
-    num_categories=6,
-    num_subcategories=3,
-    num_sub_subcategories=2,
+    num_categories=8,
+    categories_depth=3,
+    categories_width=3,
+    max_num_items=20, 
     num_max_total_sales=10,
     num_max_total_sold=10,
 )

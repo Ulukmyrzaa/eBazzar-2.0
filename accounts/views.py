@@ -129,36 +129,36 @@ class DeleteView(TemplateView):
         return render(request, self.template_name, {'form': form})    
     
 
-class WishListItemView(TemplateView):
-    template_name = 'accounts/wishlist.html'
-    form_class = WishListItemForm
+# class WishListItemView(TemplateView):
+#     template_name = 'accounts/wishlist.html'
+#     form_class = WishListItemForm
    
-    def get(self, request,*args, **kwargs):
-        user = request.user
-        form = self.form_class()    
-        return render(request, self.template_name, {'user':user, 'form': form})
+#     def get(self, request,*args, **kwargs):
+#         user = request.user
+#         form = self.form_class()    
+#         return render(request, self.template_name, {'user':user, 'form': form})
         
-    def post(self, request, *args, **kwargs):
-        user = request.user
-        form = self.form_class(request.POST)
+#     def post(self, request, *args, **kwargs):
+#         user = request.user
+#         form = self.form_class(request.POST)
         
-        if form.is_valid(): 
-            existing_item = None   
+#         if form.is_valid(): 
+#             existing_item = None   
   
-            if form.cleaned_data.get('product'):
-                existing_item = WishListItem.objects.filter(
-                    product__name=form.cleaned_data['product'].name)
+#             if form.cleaned_data.get('product'):
+#                 existing_item = WishListItem.objects.filter(
+#                     product__name=form.cleaned_data['product'].name)
             
-            if existing_item:
-                pass
-            else:
-                wishlist_item = form.save(commit=False)
-                wishlist_item.product.save()
-                wishlist_item.save()
+#             if existing_item:
+#                 pass
+#             else:
+#                 wishlist_item = form.save(commit=False)
+#                 wishlist_item.product.save()
+#                 wishlist_item.save()
             
-            return redirect('wish')
+#             return redirect('wish')
                                                          
-        return render(request, self.template_name, {'user':user, 'form': form} ) 
+#         return render(request, self.template_name, {'user':user, 'form': form} ) 
 
         
 @method_decorator(login_required, name='dispatch')

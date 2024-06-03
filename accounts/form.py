@@ -126,18 +126,6 @@ class DeleteForm(forms.ModelForm):
     )
 
 
-class WishListItemForm(forms.ModelForm):
-    product = forms.ModelChoiceField(
-        queryset=Product.objects.all(),
-        label="Product",
-        to_field_name="name",
-        required=True,
-    )
-
-    class Meta:
-        model = WishListItem
-        fields = ["product"]
-
 
 # class WishListForm(forms.ModelForm):
 #     wishList_item = forms.ModelMultipleChoiceField(queryset=WishListItem.objects.all(),
@@ -145,14 +133,14 @@ class WishListItemForm(forms.ModelForm):
 #                                                    to_field_name='product')
 class WishListForm(forms.ModelForm):
     wishList_item = forms.ModelMultipleChoiceField(
-        queryset=WishListItem.objects.values_list("product__name", flat=True),
+        queryset=WishList.objects.values_list("product__name", flat=True),
         widget=forms.Select,
         label="Любимые товары",
     )
 
     class Meta:
         model = WishList
-        fields = ["wishList_item"]
+        fields = ["user" , "product"]
 
     #     wishlist_item_form = WishListItemForm()
 

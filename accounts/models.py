@@ -50,9 +50,6 @@ class UserDetails(models.Model):
     total_item_purchased = models.IntegerField(default=0)
     total_spend = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     # orders_user = models.OneToOneField('carts.Order', on_delete=models.SET_NULL, null=True, blank=True)
-    wishlist = models.OneToOneField(
-        "WishList", on_delete=models.CASCADE, related_name="user_details"
-    )
     # basket = models.ForeignKey(
     #       'carts.Basket', on_delete=models.CASCADE, related_name='user_basket', null=True
     # )
@@ -61,19 +58,14 @@ class UserDetails(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 
-class WishListItem(models.Model):
+class WishList(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     added_time = models.DateTimeField(auto_now_add=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.product.name} ({self.added_time})"
 
-
-class WishList(models.Model):
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name="user_wishlist"
-    )
-    wishList_item = models.ManyToManyField(WishListItem, related_name="wishList_items")
 
     # def add_to_wishlist(self, product):
     #     wish_list_item, created = WishListItem.objects.get_or_create(product=product)

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.views import TemplateView, LogoutView
+from django.views import View
 from accounts.form import *
 from django.urls import reverse
 from django.views.generic.base import TemplateView
@@ -181,18 +182,12 @@ class DeleteView(TemplateView):
 #         return render(request, self.template_name, {'user': user, 'form': form})
 
         
-class WishListView(TemplateView):
+class WishListView(View):
     def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect('login')
-
-        product_id = kwargs.get('product_id')
+        
+        product_id = kwargs.get("product_id")
         product = get_object_or_404(Product, id=product_id)
-
-       
-        WishList.objects.create(user=request.user, product=product)
-        #messages.success(request, "Продукт добавлен в список желаний.")
-        
-        
-        return redirect('wishlist')  # или на страницу продукта с сообщением
-         
+        user = User.objects.get(email='example@mail.com')
+        WishList.objects.create(user=user, product=product)
+       # messages.success(request, "Продукт добавлен в список желаний.")
+        return redirect(product.get_absolute_url())  # Перенаправление на страницу продукта

@@ -9,7 +9,7 @@ urlpatterns = [
     path('edit_profile/', EditView.as_view(), name='edit_profile'),
     path('delete_user/', DeleteView.as_view(), name='delete_user'),
     path('profile/', ProfileView.as_view(), name='profile'),
-    path('wishlist/', WishListView.as_view(), name='wishlist'), 
+    #path('wishlist/', WishListView.as_view(), name='wishlist'), 
     path('wish/', WishListView.as_view(), name='wish'), 
 
 

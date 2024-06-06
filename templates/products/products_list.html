@@ -1,6 +1,5 @@
 <!-- products_list.html -->
 
-  
 <ul>
   {% for product in products %}
     <li>
@@ -9,10 +8,13 @@
       ID: {{ product.id }}
       <br>
       Полка: 
-
-      </a>
       <br>
       Статус: {{ product.productdetails.status }}
+      
+      <form method="POST" action="{% url 'wish' product_id=product.id %}">
+     
+        <button type="submit">Добавить в список желаний</button>
+    </form>
     </li>
   {% empty %}
     <li>No products found.</li>

@@ -1,3 +1,4 @@
+from pyexpat.errors import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.views import TemplateView, LogoutView
@@ -7,7 +8,7 @@ from django.urls import reverse
 from django.views.generic.base import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from products.models import Product
+from products.models import Product, ProductDetails
 from django.views.generic import CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -130,64 +131,49 @@ class DeleteView(TemplateView):
             return redirect('/')  
         return render(request, self.template_name, {'form': form})    
     
-
-# class WishListItemView(TemplateView):
-#     template_name = 'accounts/wishlist.html'
-#     form_class = WishListItemForm
-   
-#     def get(self, request,*args, **kwargs):
-#         user = request.user
-#         form = self.form_class()    
-#         return render(request, self.template_name, {'user':user, 'form': form})
         
-#     def post(self, request, *args, **kwargs):
-    #     user = request.user
-    #     form = self.form_class(request.POST)
-
-    #     if form.is_valid():
-    # # Связать wishlist_item с пользователем
-    #         wishlist_item = form.save(commit=False)
-    #         wishlist_item.user = user
-    #         wishlist_item.save()
-
-    #         return redirect('wish')
-
-    #     return render(request, self.template_name, {'user': user, 'form': form})
- 
-
-        
-# class WishListView(TemplateView):
-#     template_name = 'accounts/wishlist.html'
-#     form_class = WishListForm()
-    
-#     def get(self, request, *args, **kwargs):
-#         user = request.user
-#         form = self.form_class(user=user)
-#         # context = {'form': form}
-#         return render(request, self.template_name, {'user': user,'form' : form})
-    
-#     def post(self, request, *args, **kwargs):
-#         user = request.user
-#         form = self.form_class(user=user, data=request.POST)
-        
-#         wishlist, _ = WishList.objects.get_or_create(user=user)
-#         if form.is_valid():
-#     # Связать wishlist_item с пользователем
-#             wishlist= form.save(commit=False)
-#             wishlist.wishlist = wishlist
-#             wishlist.save()
-
-#             return redirect('wish')
-
-#         return render(request, self.template_name, {'user': user, 'form': form})
-
-        
-class WishListView(View):
+class WishAddView(View):
     def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('sign_up')
         
         product_id = kwargs.get("product_id")
         product = get_object_or_404(Product, id=product_id)
-        user = User.objects.get(email='example@mail.com')
-        WishList.objects.create(user=user, product=product)
-       # messages.success(request, "Продукт добавлен в список желаний.")
-        return redirect(product.get_absolute_url())  # Перенаправление на страницу продукта
+        product_details = ProductDetails.objects.get(product=product) 
+        
+        if product_details.status != "IN_STOCK":
+            return redirect('error_page') 
+        
+        if not WishList.objects.filter(user=request.user, product=product).exists():
+            WishList.objects.create(user=request.user, product=product)
+        return redirect('wishlist')
+ 
+# class WishListView(TemplateView): 
+#     template_name = 'accounts/wishlist.html'  
+     
+#     def get(self, request, *args, **kwargs):
+#         user = request.user
+#         wishlist = WishList.objects.filter(user=user)
+        
+#         context = {
+#             'user': user,
+#             'wishlist_items': wishlist,
+#         }
+#         return self.render_to_response(context)
+
+
+class WishListView(TemplateView):
+    template_name = 'accounts/wishlist.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        wishlist = WishList.objects.filter(user=user)
+        context['wishlist_items'] = wishlist
+        return context
+    
+    
+# def custom_404(request, exception):
+#     return render(request, 'accounts/error_page.html', status=404)
+
+# handler404 = custom_404    

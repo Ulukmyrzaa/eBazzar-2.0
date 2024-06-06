@@ -154,17 +154,6 @@ class WishListForm(forms.ModelForm):
         # Проверить, существует ли wishlist для текущего пользователя
         wishlist, _ = WishList.objects.get_or_create(user=self.user)
 
-        # Связать wishlist_item с wishlist
         self.instance.wishlist = wishlist
 
         return super().save(commit=commit)
-        
-        # if user.is_authenticated:
-        #     self.fields['product'].queryset = Product.objects.all()
-        # else:
-        #     raise PermissionError('Вам необходимо войти в систему, чтобы добавлять товары.')  
-          
-         # self.fields['product'].widget = forms.Select()
-
-    # def save(self, commit=True):
-    #     user = super(WishListForm, self).save(commit=False)

@@ -55,8 +55,13 @@ class ProductListView(ListView):
     def get_queryset(self):
         category_slug = self.kwargs.get('category_slug')
         if category_slug:
-            categories = category_slug.split('/')
-            return Product.objects.filter(product_category__slug__in=categories)
+            category_slugs = category_slug.split('/')
+            if len(category_slugs) == 1:
+                category = get_object_or_404(Category, slug=category_slugs[0])
+                return category.category_products.all()
+            else:
+                parent_category = get_object_or_404(Category, slug=category_slugs[0])
+                return Product.objects.filter(product_category__in=parent_category.get_descendants(include_self=True))
         else:
             return Product.objects.all()
 
@@ -64,9 +69,13 @@ class ProductListView(ListView):
         context = super().get_context_data(**kwargs)
         category_slug = self.kwargs.get('category_slug')
         if category_slug:
-            categories = category_slug.split('/')
-            context['current_category'] = Category.objects.filter(slug__in=categories).first()
+            category_slugs = category_slug.split('/')
+            if len(category_slugs) == 1:
+                context['current_category'] = get_object_or_404(Category, slug=category_slugs[0])
+            else:
+                context['current_category'] = get_object_or_404(Category, slug=category_slugs[0])
         return context
+
 
 
 class UpdateProductView(UpdateView):
@@ -82,36 +91,3 @@ class DeleteProductView(DeleteView):
     template_name = "delete_product.html"
     context_object_name = "product"
     success_url = "/product-list/"
-
-
-# def add_product(request):
-#     if request.method == 'POST':
-#         name = request.POST.get('name')
-#         total_price = float(request.POST.get('total_price'))
-#         quantity = int(request.POST.get('quantity'))
-#         category_id = int(request.POST.get('category_id'))
-
-#         product_info_data = {
-#             'price': float(request.POST.get('price')),
-#             'arrived_date': request.POST.get('arrived_date'),
-#             'prod_date': request.POST.get('prod_date'),
-#             'exp_date': request.POST.get('exp_date'),
-#             'status': request.POST.get('status'),
-#             'rating': float(request.POST.get('rating'))
-#         }
-
-#         product = create_product(name, total_price, quantity, category_id, product_info_data)
-#         return render(request, 'success.html', {'product': product})
-
-#     else:
-#         # Если не POST-запрос, отобразить форму для добавления товара
-#         return render(request, 'add_product.html')
-
-
-# def product_detail(request, product_id):
-#     try:
-#         product = Product.objects.get(id=product_id)
-#         return render(request, 'product_detail.html', {'product': product})
-#     except Product.DoesNotExist:
-#         error_message = 'Такого товара не существует.'
-#         return render(request, 'error.html', {'error_message': error_message})

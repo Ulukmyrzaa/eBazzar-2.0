@@ -1,10 +1,20 @@
 <!-- products_list.html -->
 
   
-  <ul>
-    {% for product in products %}
-      <li>{{ product.name }} - {{ product.price }}</li>
-    {% empty %}
-      <li>No products found.</li>
-    {% endfor %}
-  </ul>
+<ul>
+  {% for product in products %}
+    <li>
+      {{ product.name }} - {{ product.price }}
+      <br>
+      ID: {{ product.id }}
+      <br>
+      Полка: 
+
+      </a>
+      <br>
+      Статус: {{ product.productdetails.status }}
+    </li>
+  {% empty %}
+    <li>No products found.</li>
+  {% endfor %}
+</ul>

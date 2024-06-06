@@ -4,10 +4,10 @@ from accounts.models import UserDetails, WishList, User
 from django.db import transaction
 
 
-# @receiver(post_save, sender=User)
-# def create_userDetails(sender, instance, created, **kwargs):
-#     if created:
-#         UserDetails.objects.create(user=instance)
+@receiver(post_save, sender=User)
+def create_userDetails(sender, instance, created, **kwargs):
+    if created:
+        UserDetails.objects.create(user=instance)
 
 # @receiver(post_save, sender=User)
 # def create_wishlist(sender, instance, created, **kwargs):

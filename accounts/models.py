@@ -61,11 +61,15 @@ class UserDetails(models.Model):
 class WishList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     added_time = models.DateTimeField(auto_now_add=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.product.name} ({self.added_time})"
-
+        return f"{self.product.name}"
+   
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'product'], name='unique_user_product')
+        ]
 
     # def add_to_wishlist(self, product):
     #     wish_list_item, created = WishListItem.objects.get_or_create(product=product)

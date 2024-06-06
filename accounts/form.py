@@ -131,24 +131,40 @@ class DeleteForm(forms.ModelForm):
 #     wishList_item = forms.ModelMultipleChoiceField(queryset=WishListItem.objects.all(),
 #                                                    widget=forms.Select, label='Любимые товары',
 #                                                    to_field_name='product')
-class WishListForm(forms.ModelForm):
-    wishList_item = forms.ModelMultipleChoiceField(
-        queryset=WishList.objects.values_list("product__name", flat=True),
-        widget=forms.Select,
-        label="Любимые товары",
-    )
+# class WishListForm(forms.ModelForm):
+#     wishList_item = forms.ModelMultipleChoiceField(
+#         queryset=WishList.objects.values_list("product__name", flat=True),
+#         widget=forms.Select,
+#         label="Любимые товары",
+#     )
 
+
+class WishListForm(forms.ModelForm):
     class Meta:
         model = WishList
-        fields = ["user" , "product"]
+        fields = ["product"]
+        
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        
+    def save(self, commit=True):
+        # user = self.cleaned_data['user']
 
-    #     wishlist_item_form = WishListItemForm()
+        # Проверить, существует ли wishlist для текущего пользователя
+        wishlist, _ = WishList.objects.get_or_create(user=self.user)
 
-    # def __init__(self, *args, **kwargs):
-    #     super(WishListForm, self).__init__(*args, **kwargs)
+        # Связать wishlist_item с wishlist
+        self.instance.wishlist = wishlist
 
-    #     if self.instance.wishlist:
-    #         self.wishlist_item_form = WishListItemForm(instance=self.instance.wishlist)
+        return super().save(commit=commit)
+        
+        # if user.is_authenticated:
+        #     self.fields['product'].queryset = Product.objects.all()
+        # else:
+        #     raise PermissionError('Вам необходимо войти в систему, чтобы добавлять товары.')  
+          
+         # self.fields['product'].widget = forms.Select()
 
     # def save(self, commit=True):
     #     user = super(WishListForm, self).save(commit=False)

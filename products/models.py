@@ -36,10 +36,6 @@ class Category(MPTTModel):
         null=True
     )
 
-    @property
-    def get_number_of_products(self):
-        return self.category_products.filter(details__status="IN_STOCK").count()
-
     class MPTTMeta:
         order_insertion_by = ['name']
     

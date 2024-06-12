@@ -7,7 +7,7 @@
       <br>
       ID: {{ product.id }}
       <br>
-      Полка: 
+      Полка: {{ product.product_category.get_absolute_url}}
       <br>
       Статус: {{ product.productdetails.status }}
       

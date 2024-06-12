@@ -53,29 +53,22 @@ class ProductListView(ListView):
     context_object_name = "products"
 
     def get_queryset(self):
-        category_slug = self.kwargs.get('category_slug')
-        if category_slug:
-            category_slugs = category_slug.split('/')
-            if len(category_slugs) == 1:
-                category = get_object_or_404(Category, slug=category_slugs[0])
-                return category.category_products.all()
-            else:
-                parent_category = get_object_or_404(Category, slug=category_slugs[0])
-                return Product.objects.filter(product_category__in=parent_category.get_descendants(include_self=True))
+        category_slugs = self.kwargs.get('category_path')
+
+        # Если получен путь с категориями, то проверка на иерархию
+        if category_slugs:
+            category_slugs = category_slugs.split('/')
+            parent_category = get_object_or_404(Category, slug=category_slugs[0])
+            # Сверяемся с иерархией из полученного списка категорий 
+            for i in range(1, len(category_slugs)):
+                current_slug = category_slugs[i]
+                child_category = get_object_or_404(Category, slug=current_slug, parent=parent_category)
+                parent_category = child_category
+
+            return parent_category.get_products()
+        # Иначе выдача всех продуктов
         else:
-            return Product.objects.all()
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        category_slug = self.kwargs.get('category_slug')
-        if category_slug:
-            category_slugs = category_slug.split('/')
-            if len(category_slugs) == 1:
-                context['current_category'] = get_object_or_404(Category, slug=category_slugs[0])
-            else:
-                context['current_category'] = get_object_or_404(Category, slug=category_slugs[0])
-        return context
-
+            return Product.objects.all().filter(productdetails__status = "IN_STOCK")
 
 
 class UpdateProductView(UpdateView):

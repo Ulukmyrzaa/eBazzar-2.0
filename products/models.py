@@ -43,12 +43,19 @@ class Category(MPTTModel):
         ordering = ("name",)
         verbose_name = "category"
         verbose_name_plural = "categories"
-
-    def get_absolute_url(self):
-        return reverse("category", args=[self.slug])
-
+    
     def __str__(self):
         return self.name
+    
+    " Возвращает абсолютный URL-адрес категории, включая все родительские категории."
+    def get_absolute_url(self):
+        ancestors = self.get_ancestors(include_self=True)
+        slug_list = [ancestor.slug for ancestor in ancestors]
+        return '/'.join(slug_list)
+    
+    "Возвращает все продукты, принадлежащие категории и ее подкатегориям."
+    def get_products(self):
+        return Product.objects.filter(product_category__in=self.get_descendants(include_self=True), productdetails__status = "IN_STOCK")
 
 
 class Product(models.Model):

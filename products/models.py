@@ -1,6 +1,8 @@
+from functools import reduce
 from django.db import models
 from django.db.models import Sum
 from django.core.validators import MaxValueValidator
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
@@ -17,45 +19,60 @@ STATUS_CHOICES = [
 ]
 
 MEASUREMENT_UNIT = [
-    ("GRAM", 'Грамм'),
-    ("KG", 'Килограмм '),
-    ("UNIT", 'Штук'),
+    ("GRAM", "Грамм"),
+    ("KG", "Килограмм "),
+    ("UNIT", "Штук"),
 ]
 
 
 class Category(MPTTModel):
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100, unique=True)
-    category_image = models.ImageField(upload_to="category_images/")
+    category_image = models.ImageField(upload_to="static\category_images")
     level = models.IntegerField(default=0, editable=False)
     parent = models.ForeignKey(
-        'self',
+        "self",
         on_delete=models.CASCADE,
-        related_name='subcategories',
+        related_name="subcategories",
         blank=True,
-        null=True
+        null=True,
     )
 
     class MPTTMeta:
-        order_insertion_by = ['name']
-    
+        order_insertion_by = ["name"]
+
     class Meta:
         ordering = ("name",)
         verbose_name = "category"
         verbose_name_plural = "categories"
-    
+
     def __str__(self):
         return self.name
+
+
+    """Получает категорию по пути, проверяя иерархию.
+    category_path: Строка, представляющая путь к категории, разделенный слэшами.
+    Возвращает объект Category, соответствующий указанному пути, или None, если путь не найден."""
+    def check_category_path_hierarchy(category_path):
+        category_slugs = category_path.rstrip('/').split('/')
+        # Используем reduce для итерации по категориям
+        parent_category = reduce(
+            lambda category, slug: get_object_or_404(Category, slug=slug, parent=category),
+            category_slugs[1:],  # Начинаем со второго элемента
+            get_object_or_404(Category, slug=category_slugs[0])  # Начальная категория
+        )
+        return parent_category
     
     " Возвращает абсолютный URL-адрес категории, включая все родительские категории."
     def get_absolute_url(self):
         ancestors = self.get_ancestors(include_self=True)
         slug_list = [ancestor.slug for ancestor in ancestors]
-        return '/'.join(slug_list)
-    
+        return "/".join(slug_list)
+
     "Возвращает все продукты, принадлежащие категории и ее подкатегориям."
     def get_products(self):
-        return Product.objects.filter(product_category__in=self.get_descendants(include_self=True), productdetails__status = "IN_STOCK")
+        return Product.objects.filter(
+            product_category__in=self.get_descendants(include_self=True), productdetails__status = "IN_STOCK")
 
 
 class Product(models.Model):
@@ -79,7 +96,7 @@ class ProductDetails(models.Model):
     prod_date = models.DateField(default=now, null=False, blank=False)
     exp_date = models.DateField(null=True, blank=True)
     total_views = models.PositiveIntegerField(default=0, blank=False, null=False)
-    total_items_sold = models.PositiveIntegerField(default=0, blank=True, null=True)    
+    total_items_sold = models.PositiveIntegerField(default=0, blank=True, null=True)
     total_available = models.IntegerField(default=0, blank=False, null=False)
     measurement_unit = models.CharField(
         max_length=20, choices=MEASUREMENT_UNIT, default="Штук"
@@ -98,22 +115,21 @@ class ProductDetails(models.Model):
         return max(remaining_days, 0)
 
 
-
 class SellerProductInfo(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    total_money_earned = models.DecimalField(default=0, decimal_places=2, max_digits=9, blank=False, null=False)
+    total_money_earned = models.DecimalField(
+        default=0, decimal_places=2, max_digits=9, blank=False, null=False
+    )
     product_details = models.OneToOneField(
         ProductDetails, on_delete=models.CASCADE, null=False, blank=False
     )
     # pavilion = models.OneToOneField(Pavilion,  related_name="pavilion_product")
 
-
     def total_profit_in_period(self, start_date, end_date):
         return self.sales.filter(sold_time__range=(start_date, end_date)).aggregate(
             total_price_sold=Sum("price_sold")
         )["total_price_sold"]
-
 
 
 class Sales(models.Model):
@@ -123,8 +139,6 @@ class Sales(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="sold_product"
     )
-
-
 
 
 # class Review(models.Model):

@@ -7,6 +7,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
     DetailView,
+    TemplateView
 )
 from products.models import *
 from .utils import *
@@ -53,22 +54,39 @@ class ProductListView(ListView):
     context_object_name = "products"
 
     def get_queryset(self):
-        category_slugs = self.kwargs.get('category_path')
+        category_path = self.kwargs.get('category_path')
 
-        # Если получен путь с категориями, то проверка на иерархию
-        if category_slugs:
-            category_slugs = category_slugs.split('/')
-            parent_category = get_object_or_404(Category, slug=category_slugs[0])
-            # Сверяемся с иерархией из полученного списка категорий 
-            for i in range(1, len(category_slugs)):
-                current_slug = category_slugs[i]
-                child_category = get_object_or_404(Category, slug=current_slug, parent=parent_category)
-                parent_category = child_category
-
-            return parent_category.get_products()
-        # Иначе выдача всех продуктов
+        if category_path:
+            category = Category.check_category_path_hierarchy(category_path)
+            if category:
+                return category.get_products()
+            else:
+                return Product.objects.none()  # Путь не найден
         else:
-            return Product.objects.all().filter(productdetails__status = "IN_STOCK")
+            return Product.objects.all()
+
+class CategoryListView(TemplateView):
+    template_name = "products/category_list.html"
+
+    def get_queryset(self):
+        category_slug = self.kwargs.get('category')
+        sub_category_slug = self.kwargs.get('sub_category')
+
+        # Если есть подкатегория, получаем ее
+        if sub_category_slug:
+            category_path = category_slug + "/" + sub_category_slug
+            category = Category.check_category_path_hierarchy(category_path)
+        else:
+            category = get_object_or_404(Category, slug=category_slug)
+
+        # Возвращаем всех потомков текущей категории
+        return category.get_children()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = self.get_queryset()  # Передайте все категории
+        context['current_category'] = self.get_queryset().first()  # Получаем первую категорию из запроса
+        return context
 
 
 class UpdateProductView(UpdateView):

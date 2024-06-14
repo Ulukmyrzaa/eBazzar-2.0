@@ -1,0 +1,21 @@
+<div class="container">
+    <h1 class="mb-4">Категория {{current_category}}</h1>
+    <div class="row">
+        {% for category in categories %}  <!-- Используйте categories вместо current_category -->
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <!--     {% if category.category_image %}
+                            <img src="{{ category.category_image.url }}" class="card-img-top" alt="{{ category.name }}"> 
+                        {% endif %}  -->
+                    <div class="card-body">
+                        <h5 class="card-title">{{ category.name }}</h5>
+                        <p class="card-text">
+                                {{ category.get_children.count }} Подкатегории
+                        </p>
+                        <a href="{{ category.slug}}" class="btn btn-primary">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>

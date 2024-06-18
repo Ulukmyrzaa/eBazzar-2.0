@@ -2,21 +2,32 @@
 
 <ul>
   {% for product in products %}
-    <li>
-      {{ product.name }} - {{ product.price }}
-      <br>
-      ID: {{ product.id }}
-      <br>
-      Полка: {{ product.product_category.get_absolute_url}}
-      <br>
-      Статус: {{ product.productdetails.status }}
-      
-      <form method="POST" action="{% url 'wish' product_id=product.id %}">
-     
-        <button type="submit">Добавить в список желаний</button>
+  <li>
+    <a href="{{ product.get_absolute_url}}" class="btn btn-primary">
+      {{ product.name }}</a
+    >
+    <br />
+    Цена: {{ product.price }}
+    <br />
+    ID: {{ product.id }}
+    <br />
+    Категория: {{ product.product_category.get_absolute_url}}
+    <br />
+    Полка:
+    <a
+      href="{{  product.product_category.get_ancestors.first.slug}}/"
+      class="btn btn-primary"
+    >
+      {{ product.product_category.get_ancestors.first.slug}}
+    </a>
+    <br />
+    Статус: {{ product.productdetails.status }}
+
+    <form method="POST" action="{% url 'wish' product_id=product.id %}">
+      <button type="submit">Добавить в список желаний</button>
     </form>
-    </li>
+  </li>
   {% empty %}
-    <li>No products found.</li>
+  <li>No products found.</li>
   {% endfor %}
 </ul>

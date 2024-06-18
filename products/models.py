@@ -85,7 +85,7 @@ class Product(models.Model):
     )
 
     def get_absolute_url(self):
-        return reverse("product_detail", args=[self.slug])
+        return reverse("product_details", args=[self.slug])
 
     # def average_rating(self):
     #     return self.product_info.reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']

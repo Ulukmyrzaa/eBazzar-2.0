@@ -7,7 +7,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
     DetailView,
-    TemplateView
+    TemplateView,
 )
 from products.models import *
 from .utils import *
@@ -18,17 +18,17 @@ from django.db.models import Q
 
 
 class ProductDetailsView(DetailView):
-    model = ProductDetails
+    model = Product
     template_name = "products/product_details.html"
     context_object_name = "product_details"
     slug_url_kwarg = "slug"
 
-    def get_queryset(self):
-        category_slug = self.kwargs.get('category_slug')
-        product_slug = self.kwargs.get('product_slug')
-        categories = category_slug.split('/')
-        product = get_object_or_404(Product, slug=product_slug, product_category__slug__in=categories)
-        return ProductDetails.objects.filter(product=product)
+    def get_object(self):
+        product_slug = self.kwargs.get("slug")
+        product = get_object_or_404(Product, slug=product_slug)
+        productDetails = get_object_or_404(ProductDetails, product=product)
+
+        return productDetails
 
 
 class CreateProductView(CreateView):
@@ -54,38 +54,39 @@ class ProductListView(ListView):
     context_object_name = "products"
 
     def get_queryset(self):
-        category_path = self.kwargs.get('category_path')
+        category_path = self.kwargs.get("category_path")
 
-        if category_path:
-            category = Category.check_category_path_hierarchy(category_path)
-            if category:
-                return category.get_products()
-            else:
-                return Product.objects.none()  # Путь не найден
-        else:
-            return Product.objects.all()
+        category = (
+            Category.check_category_path_hierarchy(category_path)
+            if category_path
+            else None
+        )
+        return category.get_products() if category else Product.objects.all()
+
 
 class CategoryListView(TemplateView):
     template_name = "products/category_list.html"
 
     def get_queryset(self):
-        category_slug = self.kwargs.get('category')
-        sub_category_slug = self.kwargs.get('sub_category')
+        category_slug = self.kwargs.get("category")
+        sub_category_slug = self.kwargs.get("sub_category")
 
-        # Если есть подкатегория, получаем ее
-        if sub_category_slug:
-            category_path = category_slug + "/" + sub_category_slug
-            category = Category.check_category_path_hierarchy(category_path)
-        else:
-            category = get_object_or_404(Category, slug=category_slug)
+        category = (
+            Category.check_category_path_hierarchy(
+                category_slug + "/" + sub_category_slug
+            )
+            if sub_category_slug
+            else get_object_or_404(Category, slug=category_slug)
+        )
 
-        # Возвращаем всех потомков текущей категории
         return category.get_children()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['categories'] = self.get_queryset()  # Передайте все категории
-        context['current_category'] = self.get_queryset().first()  # Получаем первую категорию из запроса
+        context["current_category"] = self.kwargs.get(
+            "sub_category"
+        ) or self.kwargs.get("category")
+        context["categories"] = self.get_queryset()  # Передайте все категории
         return context
 
 
